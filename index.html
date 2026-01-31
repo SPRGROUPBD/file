@@ -32,6 +32,10 @@
             --pink: #c2185b;   /* For Cat E */
             --cyan: #00bcd4; /* For Edit Category Button */
             --shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+            /* PRINT VARIABLES - DEFAULTS */
+            --print-font-family: 'Epson Roman', 'Epson Roman T', 'Times New Roman', serif;
+            --print-font-size: 10.5pt; /* Default: 10.5pt */
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -209,31 +213,129 @@
         #print-area, #print-stock-area { display: none; }
         
         @media print {
-            body * { visibility: hidden; height: 0; overflow: hidden; }
+            @page { size: A4; margin: 10mm; }
+            
+            body * { 
+                visibility: hidden; 
+                height: 0; 
+                overflow: hidden; 
+            }
+            
             #print-area, #print-area *, #print-stock-area, #print-stock-area * { 
                 visibility: visible; 
                 height: auto; 
                 overflow: visible; 
-                /* FORCE ALL TEXT BLACK AND BACKGROUNDS TRANSPARENT */
+                color: #000 !important; 
+                background-color: transparent !important;
+                /* USE CSS VARIABLES FOR FONTS */
+                font-family: var(--print-font-family) !important; 
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+
+            #print-area, #print-stock-area { 
+                position: absolute; 
+                left: 0; top: 0; width: 100%; 
+                display: block; 
+                background: white; 
+                color: #000;
+                padding: 0;
+                margin: 0;
+            }
+
+            .print-header { 
+                display: flex; 
+                justify-content: space-between; 
+                margin-bottom: 20px; 
+                border-top: 3px double #000; 
+                border-bottom: 3px double #000; 
+                padding: 10px 0; 
+                background: none !important; 
+            }
+            
+            .print-col { 
+                flex: 1; 
+                font-size: var(--print-font-size); 
+                line-height: 1.4; 
+            }
+            .print-col.center { text-align: center; }
+            .print-col.right { text-align: right; } 
+
+            .print-title { 
+                font-family: var(--print-font-family) !important;
+                font-size: 18pt; 
+                font-weight: 900; 
+                text-transform: uppercase; 
+                margin-bottom: 15px; 
+                text-align: center; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 5px; 
+                letter-spacing: 1px; 
+                color: #000 !important; 
+            }
+
+            .print-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-top: 10px; 
+                font-size: var(--print-font-size); 
+                font-family: var(--print-font-family) !important;
+            }
+
+            .print-table th, .print-table td { 
+                border: 2px solid #000 !important; 
+                padding: 4px 3px; 
+                background: none !important; 
+                color: #000 !important; 
+                text-align: left;
+                vertical-align: middle;
+                font-weight: normal !important; 
+            }
+
+            .print-table th { 
+                text-align: center; 
+                font-weight: bold !important; 
+                border-bottom: 2px solid #000 !important; 
+                border-top: 2px solid #000 !important; 
+                text-transform: uppercase; 
+                font-size: calc(var(--print-font-size) - 1pt); 
                 color: #000 !important; 
                 background-color: transparent !important;
             }
-            #print-area, #print-stock-area { 
-                position: absolute; left: 0; top: 0; width: 100%; 
-                display: block; background: white; color: #000;
+
+            .stock-print-title { 
+                font-family: var(--print-font-family) !important;
+                font-size: 16pt; 
+                font-weight: bold; 
+                text-align: center; 
+                text-transform: uppercase; 
+                margin-bottom: 10px; 
+                border-bottom: 1px solid #000; 
+                padding-bottom: 5px; 
+                color: #000 !important; 
             }
-            @page { size: A4; margin: 10mm; }
-            .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #000; border-top: 2px solid #000; padding: 15px 0; background: none !important; }
-            .print-col { flex: 1; font-size: 14px; line-height: 1.6; }
-            .print-col.center { text-align: center; }
-            .print-col.right { text-align: right; } 
-            .print-title { font-size: 40px; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #000; padding-bottom: 5px; letter-spacing: 1px; color: #000 !important; }
-            .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-            .print-table th, .print-table td { border: 1px solid #000 !important; padding: 6px 4px; background: none !important; color: #000 !important; }
-            .print-table th { text-align: center; font-weight: bold; border-bottom: 2px solid #000 !important; border-top: 2px solid #000 !important; text-transform: uppercase; font-size: 11px; color: #000 !important; }
-            .stock-print-title { font-size: 16px; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px; color: #000 !important; }
-            .stock-print-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; font-weight: bold; color: #000 !important; }
-            .footer-note { margin-top: 30px; border-top: 1px solid #000; padding-top: 10px; font-style: italic; font-weight: bold; font-size: 20px; text-align: center; color: #000 !important; }
+
+            .stock-print-info { 
+                display: flex; 
+                justify-content: space-between; 
+                margin-bottom: 10px; 
+                font-size: var(--print-font-size); 
+                font-weight: bold; 
+                color: #000 !important; 
+            }
+
+            .footer-note { 
+                margin-top: 30px; 
+                border-top: 1px solid #000; 
+                padding-top: 10px; 
+                font-style: normal; 
+                font-weight: bold; 
+                font-size: calc(var(--print-font-size) + 2pt); 
+                text-align: center; 
+                color: #000 !important; 
+                font-family: var(--print-font-family) !important;
+                text-decoration: underline; 
+            }
         }
     </style>
 </head>
@@ -248,7 +350,6 @@
         <h2>Depot System</h2>
         <p style="color:#7f8c8d; margin-bottom: 20px;">Sample/Gift/PPM Info</p>
         
-        <!-- FIXED: Removed inline onsubmit, added ID -->
         <form id="login-form">
             <input type="text" name="username" class="login-input" placeholder="Username / ID" required autocomplete="off">
             <input type="password" name="password" class="login-input" placeholder="Password" required>
@@ -270,19 +371,16 @@
         <button onclick="window.nav('categoryView')"><i class="fa-solid fa-list"></i> Categories</button>
         <button onclick="window.nav('generator')"><i class="fa-solid fa-box-open"></i> Product</button>
         <button onclick="window.nav('giftGenerator')" style="color:var(--purple)"><i class="fa-solid fa-gift"></i> Gift</button>
-        <!-- NEW BUTTON ADDED HERE -->
-        <button onclick="window.nav('manualGenerator')" style="color:var(--warning)"><i class="fa-solid fa-pen-to-square"></i> Manual Prod</button>
+        <button onclick="window.nav('manualGenerator')" style="color:var(--warning)"><i class="fa-solid fa-pen-to-square"></i> Manual Challan</button>
         <button onclick="window.nav('challans')"><i class="fa-solid fa-file-invoice"></i> Challans</button>
         <button onclick="window.nav('management')" id="nav-mgmt"><i class="fa-solid fa-cogs"></i> Management</button>
         <button onclick="window.nav('reports')"><i class="fa-solid fa-warehouse"></i> Stock</button>
     </nav>
 
     <div class="user-controls">
-        <!-- Depot Filter for Admin -->
         <div class="depot-selector" id="depot-filter-container" style="display:none;">
             <select id="global-depot-filter" onchange="window.changeDepotFilter()">
                 <option value="ALL">All Depots</option>
-                <!-- Options populated by JS -->
             </select>
         </div>
         
@@ -318,7 +416,6 @@
                 <h3 id="d-total-da">0</h3>
                 <p>Transport (DA)</p>
             </div>
-            <!-- SPLIT CARDS FOR CHALLANS -->
             <div class="card" style="border-top: 4px solid var(--accent);">
                 <h3 id="d-total-prod-challan">0</h3>
                 <p>Product Challans</p>
@@ -334,7 +431,6 @@
                 <h3>Category Overview (Based on Product Category)</h3>
             </div>
             <div class="dashboard-grid">
-                <!-- Category A -->
                 <div class="card cat-stat-card type-A">
                     <small style="color:var(--accent); font-weight:bold;">CATEGORY A</small>
                     <h2 id="cat-sales-A" style="margin: 10px 0;">0</h2>
@@ -342,8 +438,6 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     <small>MPOs: <strong id="cat-mpo-A">0</strong></small>
                 </div>
-                
-                <!-- Category B -->
                 <div class="card cat-stat-card type-B">
                     <small style="color:var(--warning); font-weight:bold;">CATEGORY B</small>
                     <h2 id="cat-sales-B" style="margin: 10px 0;">0</h2>
@@ -351,8 +445,6 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     <small>MPOs: <strong id="cat-mpo-B">0</strong></small>
                 </div>
-                
-                <!-- Category C -->
                 <div class="card cat-stat-card type-C">
                     <small style="color:var(--teal); font-weight:bold;">CATEGORY C</small>
                     <h2 id="cat-sales-C" style="margin: 10px 0;">0</h2>
@@ -360,8 +452,6 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     <small>MPOs: <strong id="cat-mpo-C">0</strong></small>
                 </div>
-
-                <!-- Category D -->
                 <div class="card cat-stat-card type-D">
                     <small style="color:var(--orange); font-weight:bold;">CATEGORY D</small>
                     <h2 id="cat-sales-D" style="margin: 10px 0;">0</h2>
@@ -369,8 +459,6 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     <small>MPOs: <strong id="cat-mpo-D">0</strong></small>
                 </div>
-
-                <!-- Category E -->
                 <div class="card cat-stat-card type-E">
                     <small style="color:var(--pink); font-weight:bold;">CATEGORY E</small>
                     <h2 id="cat-sales-E" style="margin: 10px 0;">0</h2>
@@ -468,10 +556,19 @@
         </div>
     </section>
 
-    <!-- NEW MANUAL PRODUCT GENERATOR SECTION -->
+    <!-- NEW MANUAL GENERATOR SECTION (UPDATED TO SUPPORT BOTH PROD & GIFT) -->
     <section id="manualGenerator" class="section">
-        <h2><i class="fa-solid fa-pen-to-square"></i> Manual Product Challan</h2>
-        <p style="color:#7f8c8d; margin-top:-10px; margin-bottom: 20px;">Generate a challan with custom quantities (ignores category quotas).</p>
+        <h2><i class="fa-solid fa-pen-to-square"></i> Manual Challan Generator</h2>
+        <p style="color:#7f8c8d; margin-top:-10px; margin-bottom: 20px;">Generate a challan with custom quantities (Shows All Products or Gifts, Ignores Quotas).</p>
+        
+        <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+            <label><strong>Issue Type</strong></label>
+            <select id="manual-type-selector" onchange="window.loadManualMPODetails()" style="border: 2px solid var(--warning);">
+                <option value="prod">Product</option>
+                <option value="gift">Gift</option>
+            </select>
+        </div>
+
         <div class="split-view">
             <div class="panel">
                 <div class="panel-header"><h3>Selection Details</h3></div>
@@ -490,15 +587,15 @@
                 </div>
                 <div style="margin-top: 20px; padding-top:15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                     <strong>Total Items: <span id="manual-total-items">0</span></strong>
-                    <button class="btn btn-primary" onclick="window.generateManualChallan()" id="btn-gen-manual" disabled>Generate Manual Challan</button>
+                    <button class="btn btn-warning" onclick="window.generateManualChallan()" id="btn-gen-manual" disabled><i class="fa-solid fa-print"></i> Generate Challan</button>
                 </div>
                 <br>
                 <button class="btn btn-secondary" style="width:100%" onclick="window.resetManualGenerator()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
             </div>
             <div class="panel">
                 <div class="panel-header">
-                    <h3>Products & Quantities</h3>
-                    <div style="font-size:0.85rem; color:#666;">Enter Qty > 0 to add</div>
+                    <h3 id="manual-list-title">Products & Quantities</h3>
+                    <div style="font-size:0.85rem; color:#666;">Enter Qty > 0 to add (All items shown)</div>
                 </div>
                 <div id="manual-product-list-container" style="max-height: 600px; overflow-y: auto; border: 1px solid var(--light); border-radius: 4px;"></div>
             </div>
@@ -580,7 +677,6 @@
             <button class="btn btn-secondary" style="background-color: var(--purple); color: white;" onclick="window.showMgmt('gift')"><i class="fa-solid fa-gift"></i> Gifts</button>
             <button class="btn btn-secondary" onclick="window.showMgmt('da')"><i class="fa-solid fa-truck"></i> Transport (DA)</button>
             
-            <!-- USERS BUTTON VISIBLE -->
             <button class="btn btn-secondary" id="btn-mgmt-users" style="background-color: var(--danger); color: white;" onclick="window.showMgmt('users')"><i class="fa-solid fa-users-cog"></i> Users</button>
         </div>
 
@@ -589,7 +685,6 @@
                 <h3>MPO List</h3>
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     
-                    <!-- DYNAMIC AREA DROPDOWN FILTER -->
                     <div style="display:flex; align-items:center; gap:5px; border-right: 1px solid #ddd; padding-right: 10px; margin-right: 5px;">
                         <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Area:</label>
                         <select id="filter-mpo-area" style="width: 150px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;" onchange="window.renderMgmtTables()">
@@ -622,7 +717,6 @@
                 <h3>Transport (DA) List</h3>
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     
-                    <!-- NEW: DEPOT DROPDOWN FILTER FOR DA LIST -->
                     <div style="display:flex; align-items:center; gap:5px; border-right: 1px solid #ddd; padding-right: 10px; margin-right: 5px;">
                         <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Depot:</label>
                         <select id="filter-da-depot" style="width: 150px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;" onchange="window.renderMgmtTables()">
@@ -636,7 +730,6 @@
             <div class="table-responsive"><table id="table-da"></table></div>
         </div>
         
-        <!-- USERS PANEL VISIBLE -->
         <div id="mgmt-users" class="panel" style="display:none">
             <div class="panel-header"><h3>System Users</h3><button class="btn btn-danger" onclick="window.openModal('user')"><i class="fa-solid fa-plus"></i> Add User</button></div>
             <div class="table-responsive"><table id="table-users"></table></div>
@@ -683,12 +776,9 @@
             <input type="file" id="excel-file" accept=".xlsx, .xls" style="padding: 10px; border: 1px solid var(--border); width: 100%;">
         </div>
 
-        <!-- Preview Area -->
         <div id="upload-status" style="margin-bottom: 15px; color: var(--secondary);"></div>
         <div class="table-responsive" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; margin-bottom: 20px; display:none;" id="upload-preview-container">
-            <table id="upload-preview-table" style="font-size: 0.85rem;">
-                <!-- Preview data goes here -->
-            </table>
+            <table id="upload-preview-table" style="font-size: 0.85rem;"></table>
         </div>
 
         <div style="text-align: right;">
@@ -834,14 +924,13 @@
     let selectedGifts = new Set();
     let selectedMpoForDialog = null;
     
-    // NEW STATE FOR MANUAL GENERATOR
-    let manualSelections = {}; // Object: { prodId: quantity }
+    // STATE FOR MANUAL GENERATOR
+    let manualSelections = {}; 
 
     let editType = null; 
     let editId = null;
 
     // --- AUTHENTICATION & LOGIN ---
-    // FIX: Defined standard function and attached listener in JS instead of inline HTML
     function handleLogin(e) {
         e.preventDefault();
         const u = e.target.username.value.trim();
@@ -849,16 +938,19 @@
         const errDiv = document.getElementById('login-error');
         errDiv.style.display = 'none';
 
-        // Admin Hardcoded Login
+        // PRIORITY 1: ADMIN HARDCODED LOGIN (Always works even if DB is down)
         if (u === 'KS' && p === 'Monico@Ku007') {
             currentUser = { username: 'KS', role: 'admin', depotId: null };
             completeLogin();
             return;
         }
 
-        // User Login from Firebase DB
+        // PRIORITY 2: USER LOGIN FROM FIREBASE DB
         fetch('https://mplfpdc-default-rtdb.europe-west1.firebasedatabase.app/users.json')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
             .then(users => {
                 if (users) {
                     const foundUser = Object.values(users).find(user => user.username.toLowerCase() === u.toLowerCase() && user.password === p);
@@ -866,15 +958,15 @@
                         currentUser = { username: foundUser.username, role: 'user', depotId: foundUser.depotId };
                         completeLogin();
                     } else {
-                        showLoginError("Invalid Credentials");
+                        showLoginError("Invalid Username or Password");
                     }
                 } else {
-                    showLoginError("Invalid Credentials");
+                    showLoginError("No users found in database");
                 }
             })
             .catch(err => {
-                console.error(err);
-                showLoginError("Connection Error");
+                console.error("Login Error:", err);
+                showLoginError("Connection Failed. Check Internet or contact Admin.");
             });
     }
 
@@ -970,13 +1062,11 @@
         document.getElementById('d-total-gifts').innerText = fGifts.length;
         document.getElementById('d-total-da').innerText = fDas.length;
         
-        // UPDATED: Split Challan Counts
         const prodChallans = fChallans.filter(c => c.type === 'Product').length;
         const giftChallans = fChallans.filter(c => c.type === 'Gift').length;
         document.getElementById('d-total-prod-challan').innerText = prodChallans;
         document.getElementById('d-total-gift-challan').innerText = giftChallans;
 
-        // CATEGORY A-E LOGIC
         let catStats = { 
             'A': { sales: 0, count: 0 }, 
             'B': { sales: 0, count: 0 }, 
@@ -1023,12 +1113,12 @@
             select.value = currentVal;
         }
 
+        // Refresh lists if tab is active
         const mpoId = document.getElementById('gen-mpo').value;
         if(mpoId) window.loadMPODetails();
         const mpoIdGift = document.getElementById('gen-mpo-gift').value;
         if(mpoIdGift) window.loadGiftMPODetails();
         
-        // UPDATE MANUAL SELECT
         const manualMpoId = document.getElementById('manual-mpo').value;
         if(manualMpoId) window.loadManualMPODetails();
     }
@@ -1090,7 +1180,6 @@
                 return nameMatch || idMatch;
             });
 
-            // --- SORTING LOGIC ADDED HERE (AREA WISE A-Z) ---
             filteredMpos.sort((a, b) => {
                 const areaA = (a.area || '').toLowerCase();
                 const areaB = (b.area || '').toLowerCase();
@@ -1141,14 +1230,14 @@
     window.populateSelects = function(fMpos, fDas) {
         const mpoSel = document.getElementById('gen-mpo');
         const mpoSelGift = document.getElementById('gen-mpo-gift');
-        const mpoSelManual = document.getElementById('manual-mpo'); // NEW
+        const mpoSelManual = document.getElementById('manual-mpo'); 
         const filterSel = document.getElementById('filter-mpo');
         const currentMpo = mpoSel.value;
         const currentFilter = filterSel.value;
 
         mpoSel.innerHTML = '<option value="">-- Choose MPO --</option>';
         mpoSelGift.innerHTML = '<option value="">-- Choose MPO --</option>';
-        mpoSelManual.innerHTML = '<option value="">-- Choose MPO --</option>'; // NEW
+        mpoSelManual.innerHTML = '<option value="">-- Choose MPO --</option>'; 
         filterSel.innerHTML = '<option value="">All MPOs</option>';
         
         if(fMpos && fMpos.length) {
@@ -1157,7 +1246,7 @@
                 const opt = `<option value="${m.id}">${m.name} (${m.id}) [${catDisplay}]</option>`;
                 mpoSel.innerHTML += opt;
                 mpoSelGift.innerHTML += opt;
-                mpoSelManual.innerHTML += opt; // NEW
+                mpoSelManual.innerHTML += opt; 
                 filterSel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
             });
         }
@@ -1222,7 +1311,6 @@
             else if(cat === 'E') qty = p.qtyE || 0;
             else qty = 0;
 
-            // HIDE PRODUCTS WITH ZERO QUANTITY
             if (qty <= 0) return;
 
             const div = document.createElement('div');
@@ -1232,6 +1320,10 @@
                 <div class="product-list-info">
                     <strong>${p.name}</strong>
                     <span>ID: ${p.id} | Pack: ${p.pack} | Unit: ${p.unit}</span>
+                </div>
+                <!-- Display Category Quantities inside the list for reference -->
+                <div style="display:flex; gap:5px; margin-left:auto; font-size:0.75rem; color:#666; background:#eee; padding:2px 5px; border-radius:3px;">
+                    A:${p.qtyA} B:${p.qtyB} C:${p.qtyC} D:${p.qtyD} E:${p.qtyE}
                 </div>
                 <div class="product-qty">Avail: ${qty}</div>
             `;
@@ -1308,6 +1400,10 @@
             div.innerHTML = `
                 <input type="checkbox" class="gift-cb" value="${p.id}" onchange="window.toggleGift('${p.id}')">
                 <div class="product-list-info"><strong>${p.name}</strong><span>ID: ${p.id} | Pack: ${p.pack}</span></div>
+                 <!-- Display Category Quantities inside the list for reference -->
+                <div style="display:flex; gap:5px; margin-left:auto; font-size:0.75rem; color:#666; background:#eee; padding:2px 5px; border-radius:3px;">
+                    A:${p.qtyA} B:${p.qtyB} C:${p.qtyC} D:${p.qtyD} E:${p.qtyE}
+                </div>
                 <div class="product-qty" style="color:var(--purple)">Avail: ${qty}</div>
             `;
             listContainer.appendChild(div);
@@ -1354,22 +1450,27 @@
         loadGiftMPODetails();
     };
 
-    // --- MANUAL GENERATOR LOGIC START ---
+    // --- UPDATED MANUAL GENERATOR LOGIC (NOW SUPPORTS PROD & GIFT) ---
     window.loadManualMPODetails = function() {
         const id = document.getElementById('manual-mpo').value;
+        const type = document.getElementById('manual-type-selector').value; // 'prod' or 'gift'
+        
         const fMpos = getFilteredData(data.mpos).filter(m => m.isActive !== false);
         const fDas = getFilteredData(data.das);
-        const fProds = getFilteredData(data.prods);
+        
+        // Get data based on type selector
+        const sourceData = (type === 'gift') ? getFilteredData(data.gifts) : getFilteredData(data.prods);
 
         const details = document.getElementById('manual-mpo-details');
         const daSel = document.getElementById('manual-da');
         const listContainer = document.getElementById('manual-product-list-container');
+        const listTitle = document.getElementById('manual-list-title');
         
         if (!id) {
             details.style.display = 'none';
             daSel.disabled = true;
             daSel.innerHTML = '<option value="">-- Choose DA --</option>';
-            listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Select MPO to view products</div>';
+            listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Select MPO to view items</div>';
             manualSelections = {};
             updateCount('manual');
             return;
@@ -1394,8 +1495,15 @@
         listContainer.innerHTML = '';
         manualSelections = {};
         
-        // Show all products, not filtered by category, for manual selection
-        fProds.forEach(p => {
+        // UPDATE TITLE BASED ON TYPE
+        if(type === 'gift') {
+            listTitle.innerText = "All Gifts & Quantities";
+        } else {
+            listTitle.innerText = "All Products & Quantities";
+        }
+
+        // LOOP THROUGH ALL ACTIVE ITEMS (NO QUOTA FILTERING)
+        sourceData.forEach(p => {
             if (p.isActive === false || p.isActive === 'false') return;
 
             const div = document.createElement('div');
@@ -1403,7 +1511,11 @@
             div.innerHTML = `
                 <div class="product-list-info">
                     <strong>${p.name}</strong>
-                    <span>ID: ${p.id} | Pack: ${p.pack} | Unit: ${p.unit}</span>
+                    <span>ID: ${p.id} | Pack: ${p.pack} | Unit: ${p.unit || '-'}</span>
+                </div>
+                <!-- Show quotas as reference but allow manual override -->
+                <div style="display:flex; gap:2px; margin-left:auto; font-size:0.7rem; color:#888; background:#eee; padding:2px 4px; border-radius:3px; align-self:center;">
+                    A:${p.qtyA} B:${p.qtyB} C:${p.qtyC}
                 </div>
                 <input type="number" min="0" class="manual-qty-input" placeholder="0" onchange="window.updateManualSelection('${p.id}', this.value)">
             `;
@@ -1430,12 +1542,13 @@
     window.generateManualChallan = function() {
         if(!currentMPO || Object.keys(manualSelections).length === 0) return;
 
-        const fProds = getFilteredData(data.prods);
+        const type = document.getElementById('manual-type-selector').value; // 'prod' or 'gift'
+        const fItems = (type === 'gift') ? getFilteredData(data.gifts) : getFilteredData(data.prods);
+        
         const itemsArray = [];
         
-        // Build items array based on manual input
         for (const [pid, qty] of Object.entries(manualSelections)) {
-            const p = fProds.find(x => x.id === pid);
+            const p = fItems.find(x => x.id === pid);
             if(p) {
                 itemsArray.push({ ...p, issueQty: qty });
             }
@@ -1474,20 +1587,20 @@
         const serialStr = newSerial.toString().padStart(3, '0');
         const challanNo = `${basePrefix}${serialStr}`;
         
-        const cat = currentMPO.categoryProd || currentMPO.category || 'A'; // Just for record, though manual
+        const cat = currentMPO.categoryProd || currentMPO.category || 'A';
 
         const newChallan = {
             id: challanNo,
             date: dateObj.toLocaleDateString('en-GB'),
             timestamp: Date.now(),
-            type: 'Product', // It's a product challan
-            isManual: true, // Flag to identify manual challans if needed later
+            type: type === 'gift' ? 'Gift' : 'Product', // Save actual type
+            isManual: true,
             mpoId: currentMPO.id,
             mpoName: currentMPO.name,
             mpoTerritory: currentMPO.territory,
             mpoArea: currentMPO.area || '', 
             mpoRegion: currentMPO.region || '', 
-            mpoCat: cat,
+            mpoCat: cat, // Keep original category for reporting
             mpoSales: currentMPO.sales,
             daId: daId,
             items: itemsArray,
@@ -1501,7 +1614,7 @@
             window.nav('challans');
         }).catch(err => showToast("Error: " + err.message));
     };
-    // --- MANUAL GENERATOR LOGIC END ---
+    // --- END MANUAL GENERATOR LOGIC ---
 
     window.generateChallan = function(type) {
         let itemsArray = [];
@@ -1523,9 +1636,8 @@
         const month = ("0" + (dateObj.getMonth() +1)).slice(-2);
         
         let depotCode = "KS"; 
-        let assignedDepotId = currentUser.depotId; // Default depot ID
+        let assignedDepotId = currentUser.depotId; 
         
-        // --- FIX: If Admin, use MPO's depot ID ---
         if (currentUser.role === 'admin') {
             assignedDepotId = currentMPO.depotId || 'ALL'; 
         }
@@ -1580,11 +1692,11 @@
             mpoTerritory: currentMPO.territory,
             mpoArea: currentMPO.area || '', 
             mpoRegion: currentMPO.region || '', 
-            mpoCat: cat, // Saves relevant category used
+            mpoCat: cat,
             mpoSales: currentMPO.sales,
             daId: daId,
             items: items,
-            depotId: assignedDepotId // Use calculated ID (Admin uses MPO's ID)
+            depotId: assignedDepotId
         };
 
         push(ref(db, 'challans'), newChallan).then(() => {
@@ -1625,6 +1737,48 @@
         document.getElementById('filter-challan-no').value = "";
         window.renderChallans();
     }
+
+    // --- FIXED PRINT FUNCTION ---
+    window.printChallan = function(key, type) {
+        const c = data.challans.find(x => x.key === key);
+        if(!c) return;
+        
+        // APPLY DEFAULT 10.5PT EPSON ROMAN SETTINGS BEFORE PRINTING
+        document.documentElement.style.setProperty('--print-font-family', "'Epson Roman', 'Epson Roman T', 'Times New Roman', serif");
+        document.documentElement.style.setProperty('--print-font-size', "10.5pt");
+
+        const da = data.das.find(d => d.id === c.daId) || {name: 'N/A', id: 'N/A'};
+        const depot = c.depotId || 'HQ';
+
+        document.getElementById('print-stock-area').style.display = 'none';
+        document.getElementById('print-area').style.display = 'block';
+
+        document.getElementById('p-mpo-id').innerText = c.mpoId;
+        document.getElementById('p-mpo-name').innerText = c.mpoName;
+        document.getElementById('p-territory').innerText = c.mpoTerritory;
+        document.getElementById('p-area').innerText = c.mpoArea || '-';
+        document.getElementById('p-depot').innerText = depot;
+        document.getElementById('p-region').innerText = c.mpoRegion || '-';
+        
+        document.getElementById('p-da-name').innerText = da.name;
+        document.getElementById('p-da-id').innerText = da.id;
+        document.getElementById('p-ch-no').innerText = c.id;
+        document.getElementById('p-date').innerText = c.date;
+        document.getElementById('p-tp-sales').innerText = c.mpoSales ? Number(c.mpoSales).toLocaleString() : '0';
+        document.getElementById('p-cat').innerText = c.mpoCat || '-';
+
+        const tbody = document.getElementById('p-table-body');
+        tbody.innerHTML = '';
+        let totalQty = 0;
+        c.items.forEach((item, index) => {
+            totalQty += parseInt(item.issueQty || 0);
+            tbody.innerHTML += `<tr><td style="text-align:center">${index+1}</td><td>${item.id}</td><td>${item.name}</td><td>${item.pack}</td><td style="text-align:center">${item.issueQty}</td><td style="text-align:center">${item.unit}</td></tr>`;
+        });
+        document.getElementById('p-total-qty').innerText = totalQty;
+        
+        // IMMEDIATE PRINT
+        window.print();
+    };
 
     window.renderChallans = function(fChallans, fMpos) {
         if (!fChallans) fChallans = getFilteredData(data.challans);
@@ -1674,18 +1828,15 @@
             const matchesCategory = !categoryFilter || c.mpoCat === categoryFilter;
             return matchesMPO && matchesDepot && matchesChallan && matchesCategory;
         }).sort((a, b) => {
-            // --- SORTING LOGIC: AREA WISE A-Z, THEN DATE ---
             const areaA = (a.mpoArea || '').toLowerCase();
             const areaB = (b.mpoArea || '').toLowerCase();
             
             if (areaA < areaB) return -1;
             if (areaA > areaB) return 1;
             
-            // If Area is same, sort by Date (newest first)
             return b.timestamp - a.timestamp;
         });
 
-        // UPDATE TOTAL COUNT DISPLAY
         document.getElementById('challan-count-badge').innerText = `(Total: ${list.length})`;
 
         const contentArea = document.getElementById('challan-content-area');
@@ -1698,7 +1849,6 @@
             noMsg.style.display = 'none';
 
             if (viewMode === 'list') {
-                // --- FLAT LIST RENDERING ---
                 let html = `
                     <div class="table-responsive">
                         <table>
@@ -1720,7 +1870,7 @@
                     let typeBadge = '';
                     
                     if(c.isManual) {
-                        typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Man-Prod</span>';
+                        typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
                     } else if (c.type === 'Gift') {
                         typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
                     } else {
@@ -1745,7 +1895,6 @@
                 contentArea.innerHTML = html;
 
             } else {
-                // --- MONTH WISE RENDERING ---
                 const groupedByMonth = {};
                 list.forEach(c => {
                     const dateObj = new Date(c.timestamp);
@@ -1789,7 +1938,7 @@
                         let typeBadge = '';
                         
                         if(c.isManual) {
-                            typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Man-Prod</span>';
+                            typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
                         } else if (c.type === 'Gift') {
                             typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
                         } else {
@@ -1821,40 +1970,6 @@
         if(confirm('Delete this challan?')) remove(ref(db, 'challans/' + key)).then(() => showToast("Challan Deleted"));
     };
 
-    window.printChallan = function(key, type) {
-        const c = data.challans.find(x => x.key === key);
-        if(!c) return;
-        const da = data.das.find(d => d.id === c.daId) || {name: 'N/A', id: 'N/A'};
-        const depot = c.depotId || 'HQ';
-
-        document.getElementById('print-stock-area').style.display = 'none';
-        document.getElementById('print-area').style.display = 'block';
-
-        document.getElementById('p-mpo-id').innerText = c.mpoId;
-        document.getElementById('p-mpo-name').innerText = c.mpoName;
-        document.getElementById('p-territory').innerText = c.mpoTerritory;
-        document.getElementById('p-area').innerText = c.mpoArea || '-';
-        document.getElementById('p-depot').innerText = depot;
-        document.getElementById('p-region').innerText = c.mpoRegion || '-';
-        
-        document.getElementById('p-da-name').innerText = da.name;
-        document.getElementById('p-da-id').innerText = da.id;
-        document.getElementById('p-ch-no').innerText = c.id;
-        document.getElementById('p-date').innerText = c.date;
-        document.getElementById('p-tp-sales').innerText = c.mpoSales ? Number(c.mpoSales).toLocaleString() : '0';
-        document.getElementById('p-cat').innerText = c.mpoCat || '-';
-
-        const tbody = document.getElementById('p-table-body');
-        tbody.innerHTML = '';
-        let totalQty = 0;
-        c.items.forEach((item, index) => {
-            totalQty += parseInt(item.issueQty || 0);
-            tbody.innerHTML += `<tr><td style="text-align:center">${index+1}</td><td>${item.id}</td><td>${item.name}</td><td>${item.pack}</td><td style="text-align:center">${item.issueQty}</td><td style="text-align:center">${item.unit}</td></tr>`;
-        });
-        document.getElementById('p-total-qty').innerText = totalQty;
-        window.print();
-    };
-
     window.renderStockReport = function(fProds, fGifts, fChallans) {
         const table = document.getElementById('stock-report-table');
         let realUsage = {};
@@ -1876,9 +1991,6 @@
             const used = realUsage[p.id] || 0;
             const closing = received - used;
 
-            // REMOVED: if (closing <= 0) return;
-            // NOW SHOWING EVERYTHING ON SCREEN (Even 0 or Negative)
-            
             table.innerHTML += `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.pack}</td><td>${p.unit}</td><td>${received}</td><td>${used}</td><td style="font-weight:bold; color:${closing < 0 ? 'red' : 'green'}">${closing}</td></tr>`;
         });
     };
@@ -1899,13 +2011,11 @@
         if(screenTable) {
             const rows = screenTable.querySelectorAll('tbody tr');
             rows.forEach(row => {
-                // শেষ কলামটি (Closing Stock) খুঁজে বের করা হচ্ছে
                 const closingCell = row.lastElementChild; 
                 
                 if (closingCell) {
                     const closingValue = parseFloat(closingCell.innerText);
                     
-                    // শুধুমাত্র তখনই প্রিন্টে যোগ করবে যদি ক্লোজিং ভ্যালু ০ এর বেশি হয়
                     if (closingValue > 0) {
                         printTbody.innerHTML += row.innerHTML.replace(/color:\s*(\w+|#\w+);?/gi, '');
                     }
@@ -1917,18 +2027,15 @@
     };
 
     window.renderMgmtTables = function(fMpos, fProds, fGifts, fDas, fUsers) {
-        // If arguments are not provided (e.g., via onchange event), fetch from global state
         if (!fMpos) fMpos = getFilteredData(data.mpos);
         if (!fProds) fProds = getFilteredData(data.prods);
         if (!fGifts) fGifts = getFilteredData(data.gifts);
         if (!fDas) fDas = getFilteredData(data.das);
         if (!fUsers) fUsers = currentUser.role === 'admin' ? data.users : [];
         
-        // --- AREA DROPDOWN LOGIC (MPO) ---
         const areaSelect = document.getElementById('filter-mpo-area');
         const currentAreaSelection = areaSelect.value;
         
-        // 1. Collect unique areas
         const uniqueAreas = new Set();
         fMpos.forEach(m => {
             if (m.area && m.area.trim() !== "") {
@@ -1936,7 +2043,6 @@
             }
         });
 
-        // 2. Rebuild Select Options
         let areaOptionsHtml = '<option value="">All Areas</option>';
         Array.from(uniqueAreas).sort().forEach(area => {
             const selected = area === currentAreaSelection ? 'selected' : '';
@@ -1944,13 +2050,11 @@
         });
         areaSelect.innerHTML = areaOptionsHtml;
 
-        // 3. Filter Logic
         let filteredMpos = fMpos;
         if (areaSelect.value !== "") {
             filteredMpos = fMpos.filter(m => m.area === areaSelect.value);
         }
 
-        // --- SORTING LOGIC ADDED HERE (AREA WISE A-Z) ---
         filteredMpos.sort((a, b) => {
             const areaA = (a.area || '').toLowerCase();
             const areaB = (b.area || '').toLowerCase();
@@ -1960,7 +2064,6 @@
         });
 
         const mpoT = document.getElementById('table-mpo');
-        // UPDATED HEADER to include Area and TP Sales explicitly
         mpoT.innerHTML = `<thead><tr><th>ID</th><th>Name</th><th>Territory</th><th>Area</th><th>TP Sales</th><th>Cat(Prod)</th><th>Cat(Gift)</th><th>Status</th><th>Depot</th><th>Actions</th></tr></thead>`;
         
         filteredMpos.forEach(m => {
@@ -1990,11 +2093,9 @@
                 </tr>`;
         });
 
-        // --- DA DEPOT DROPDOWN LOGIC (NEW) ---
         const daDepotSelect = document.getElementById('filter-da-depot');
         const currentDaDepotVal = daDepotSelect.value;
         
-        // 1. Collect unique depots from DAs
         const uniqueDaDepots = new Set();
         fDas.forEach(d => {
             if (d.depotId && d.depotId.trim() !== "") {
@@ -2002,7 +2103,6 @@
             }
         });
 
-        // 2. Rebuild Select Options
         let daDepotOptionsHtml = '<option value="">All Depots</option>';
         Array.from(uniqueDaDepots).sort().forEach(depot => {
             const selected = depot === currentDaDepotVal ? 'selected' : '';
@@ -2010,13 +2110,11 @@
         });
         daDepotSelect.innerHTML = daDepotOptionsHtml;
 
-        // 3. Filter Logic
         let filteredDas = fDas;
         if (daDepotSelect.value !== "") {
             filteredDas = fDas.filter(d => d.depotId === daDepotSelect.value);
         }
 
-        // --- SORTING LOGIC ADDED HERE (DEPOT WISE A-Z) ---
         filteredDas.sort((a, b) => {
             const depotA = (a.depotId || '').toLowerCase();
             const depotB = (b.depotId || '').toLowerCase();
@@ -2035,7 +2133,6 @@
             const toggleBtnColor = (p.isActive === false || p.isActive === 'false') ? 'var(--success)' : 'var(--danger)';
             const toggleIcon = (p.isActive === false || p.isActive === 'false') ? 'fa-toggle-on' : 'fa-toggle-off';
 
-            // ADDED: CYAN BUTTON
             const btnCyan = `<button class="btn btn-sm btn-cyan" onclick="window.openModal('editCategory','${p.id}')" title="Edit Category"><i class="fa-solid fa-edit"></i> Cat</button>`;
 
             prodT.innerHTML += `
@@ -2047,7 +2144,7 @@
                     <td>
                         ${btnCyan}
                         <button class="btn btn-sm btn-secondary" onclick="window.editItem('prod','${p.id}')"><i class="fa-solid fa-pen"></i></button> 
-                        <button class="btn btn-sm btn-warning" onclick="window.openAddStockModal('${p.id}')" title="Add Stock"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn btn-warning" onclick="window.openAddStockModal('${p.id}')" title="Add Stock"><i class="fa-solid fa-plus"></i></button>
                         <button class="btn btn-sm btn-danger" onclick="window.deleteItem('prod','${p.id}')"><i class="fa-solid fa-trash"></i></button>
                         <button class="btn btn-sm" style="background-color:${toggleBtnColor}; color:white;" onclick="window.toggleProductStatus('${p.id}')" title="Toggle Active/Inactive"><i class="fa-solid ${toggleIcon}"></i></button>
                     </td>
@@ -2077,7 +2174,6 @@
                 </tr>`;
         });
 
-        // Render DA Table with FILTERED Data
         const daT = document.getElementById('table-da');
         daT.innerHTML = `<thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Depot</th><th>Actions</th></tr></thead>`;
         filteredDas.forEach(d => {
@@ -2168,7 +2264,6 @@
             }
         };
 
-        // --- EDIT CATEGORY MODE LOGIC ---
         if (type === 'editCategory') {
             const p = data.prods.find(x => x.id === id);
             if (!p) return;
@@ -2202,7 +2297,7 @@
                     </div>
                 </div>
             `;
-            return; // Stop normal form generation
+            return; 
         }
 
         if(type === 'mpo') {
@@ -2324,7 +2419,6 @@
         const obj = {};
         formData.forEach((value, key) => obj[key] = value);
 
-        // --- CATEGORY EDIT SAVE LOGIC ---
         if(editType === 'editCategory') {
             const updateObj = {
                 qtyA: Number(form.qtyA.value),
@@ -2339,10 +2433,9 @@
                     closeModal();
                 })
                 .catch(err => showToast("Error updating categories: " + err.message));
-            return; // Stop normal save logic
+            return; 
         }
 
-        // --- STOCK ADDITION LOGIC ---
         if(editType === 'addStock') {
             const addedStock = Number(obj.stockToAdd);
             const product = data.prods.find(p => p.id === editId);
@@ -2351,17 +2444,15 @@
             const currentStock = Number(product.receivedStock || 0);
             const newTotalStock = currentStock + addedStock;
             
-            // Use update to only change receivedStock
             update(ref(db, `prods/${editId}`), { receivedStock: newTotalStock })
                 .then(() => {
                     showToast(`Stock Updated! New Total: ${newTotalStock}`);
                     closeModal();
                 })
                 .catch(err => showToast("Error updating stock: " + err.message));
-            return; // Stop normal save logic
+            return; 
         }
 
-        // --- NORMAL SAVE LOGIC ---
         if(obj.sales) obj.sales = Number(obj.sales);
         
         if(obj.qtyA) { 
@@ -2552,21 +2643,19 @@
 
 <!-- DEVELOPER TOOLS BLOCKER -->
 <script>
-    // Disable Right Click
     document.addEventListener('contextmenu', event => event.preventDefault());
 
-    // Disable F12 and other inspection keys
     document.onkeydown = function(e) {
-        if(e.keyCode == 123) { // F12
+        if(e.keyCode == 123) { 
             return false;
         }
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { 
             return false;
         }
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { 
             return false;
         }
-        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U
+        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { 
             return false;
         }
     }
