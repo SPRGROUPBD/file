@@ -122,10 +122,8 @@
             nav { display: none !important; }
             #mobile-menu-btn { display: block; }
             #mobile-nav { display: flex; }
-            
-            /* Adjust header layout for mobile */
             header { padding: 0 1rem; }
-            .user-info span { display: none; } /* Hide name on mobile to save space */
+            .user-info span { display: none; }
         }
 
         /* MAIN CONTAINER */
@@ -245,6 +243,7 @@
         /* MODAL */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(2px); }
         .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 500px; max-width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 15px 30px rgba(0,0,0,0.3); animation: slideDown 0.3s; }
+        .modal-content.large { width: 800px; } /* For viewing challans */
         @keyframes slideDown { from {transform: translateY(-50px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
         .close { color: #aaa; float: right; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .close:hover { color: var(--danger); }
@@ -271,7 +270,6 @@
                 overflow: visible; 
                 color: #000 !important; 
                 background-color: transparent !important;
-                /* USE CSS VARIABLES FOR FONTS */
                 font-family: var(--print-font-family) !important; 
                 text-shadow: none !important;
                 box-shadow: none !important;
@@ -515,9 +513,20 @@
             </div>
         </div>
 
+        <!-- DASHBOARD CATEGORY WISE CHALLAN VIEW (NEW) -->
         <div class="panel">
             <div class="panel-header">
-                <h3>Category Overview (Based on Product Category)</h3>
+                <h3>Challan Stats (By Category)</h3>
+                <small>Current Month View</small>
+            </div>
+            <div class="dashboard-grid" id="dashboard-challan-stats">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>MPO Category Overview (Based on Sales)</h3>
             </div>
             <div class="dashboard-grid">
                 <div class="card cat-stat-card type-A">
@@ -645,7 +654,7 @@
         </div>
     </section>
 
-    <!-- NEW MANUAL GENERATOR SECTION (UPDATED TO SUPPORT BOTH PROD & GIFT) -->
+    <!-- NEW MANUAL GENERATOR SECTION -->
     <section id="manualGenerator" class="section">
         <h2><i class="fa-solid fa-pen-to-square"></i> Manual Challan Generator</h2>
         <p style="color:#7f8c8d; margin-top:-10px; margin-bottom: 20px;">Generate a challan with custom quantities (Shows All Products or Gifts, Ignores Quotas).</p>
@@ -707,6 +716,12 @@
                             <option value="list">Flat List</option>
                             <option value="month" selected>Month Wise</option>
                         </select>
+                    </div>
+
+                    <!-- DATE FILTER (NEW) -->
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Date:</label>
+                        <input type="date" id="filter-date" style="width: 140px; padding: 5px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px;" onchange="window.renderChallans()">
                     </div>
 
                     <!-- DEPOT FILTER -->
@@ -856,6 +871,48 @@
             <div id="modal-fields"></div>
             <button type="submit" class="btn btn-success" style="width:100%; margin-top:20px; font-size: 1.1rem;">Save Record</button>
         </form>
+    </div>
+</div>
+
+<!-- VIEW CHALLAN DETAIL MODAL (NEW) -->
+<div id="view-challan-modal" class="modal">
+    <div class="modal-content large">
+        <span class="close" onclick="document.getElementById('view-challan-modal').style.display='none'">&times;</span>
+        <h3 id="vc-title" style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: var(--primary);">Challan Details</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 0.9rem;">
+            <div>
+                <strong>MPO:</strong> <span id="vc-mpo-name"></span><br>
+                <strong>ID:</strong> <span id="vc-mpo-id"></span><br>
+                <strong>Territory:</strong> <span id="vc-territory"></span>
+            </div>
+            <div>
+                <strong>DA:</strong> <span id="vc-da-name"></span><br>
+                <strong>Date:</strong> <span id="vc-date"></span><br>
+                <strong>Type:</strong> <span id="vc-type"></span>
+            </div>
+        </div>
+
+        <h4 style="margin: 10px 0; border-bottom: 1px solid #ddd;">Items</h4>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table style="font-size: 0.85rem;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Pack</th>
+                        <th style="text-align:right">Qty</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody id="vc-items-body"></tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('view-challan-modal').style.display='none'">Close</button>
+            <button class="btn btn-primary" id="vc-print-btn"><i class="fa-solid fa-print"></i> Print Challan</button>
+        </div>
     </div>
 </div>
 
@@ -1016,7 +1073,6 @@
     let currentDepotFilter = 'ALL'; 
     let allDepots = new Set();
     
-    // Store active product/gift listeners to detach them later when switching depots
     let productListeners = []; 
     let giftListeners = []; 
 
@@ -1028,8 +1084,6 @@
     let selectedProducts = new Set();
     let selectedGifts = new Set();
     let selectedMpoForDialog = null;
-    
-    // STATE FOR MANUAL GENERATOR
     let manualSelections = {}; 
 
     let editType = null; 
@@ -1043,7 +1097,7 @@
         const errDiv = document.getElementById('login-error');
         errDiv.style.display = 'none';
 
-        // PRIORITY 1: ADMIN HARDCODED LOGIN (Always works even if DB is down)
+        // PRIORITY 1: ADMIN HARDCODED LOGIN
         if (u === 'KS' && p === 'Monico@Ku007') {
             currentUser = { username: 'KS', role: 'admin', depotId: null };
             completeLogin();
@@ -1075,11 +1129,8 @@
             });
     }
 
-    // Attach Event Listener
     const loginForm = document.getElementById('login-form');
-    if(loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
+    if(loginForm) loginForm.addEventListener('submit', handleLogin);
 
     function showLoginError(msg) {
         const errDiv = document.getElementById('login-error');
@@ -1107,17 +1158,14 @@
         location.reload();
     };
 
-    // --- UPDATED DEPOT FILTER LOGIC ---
     window.changeDepotFilter = function() {
         currentDepotFilter = document.getElementById('global-depot-filter').value;
-        // DETACH OLD LISTENERS
         productListeners.forEach(unsub => unsub());
         productListeners = [];
         giftListeners.forEach(unsub => unsub());
         giftListeners = [];
-        // RE-ATTACH NEW LISTENERS BASED ON FILTER
         initProductListeners();
-        initGiftListeners(); // NEW: Attach Gift Listeners
+        initGiftListeners(); 
     };
 
     function getFilteredData(rawData) {
@@ -1133,11 +1181,9 @@
         return result;
     }
 
-    // --- INITIALIZATION ---
     function initDataListeners() {
         document.getElementById('loader').style.display = 'block';
 
-        // 1. Listen to MPOs, DAs, Challans, Users (Structure unchanged for these)
         const listen = (path, key) => {
             onValue(ref(db, path), (snapshot) => {
                 data[key] = [];
@@ -1158,58 +1204,44 @@
         listen('challans', 'challans');
         listen('users', 'users');
 
-        // 2. PRODUCTS LOGIC: Dynamic based on Depot
         initProductListeners();
-        
-        // 3. GIFTS LOGIC: Dynamic based on Depot (NEW STRUCTURE)
         initGiftListeners();
     }
 
-    // --- NEW PRODUCT LISTENER LOGIC (DEPOT WISE + MANUAL ID SUPPORT) ---
     function initProductListeners() {
-        // Clear current products from memory
         data.prods = [];
 
         if (currentUser.role === 'user') {
-            // USER: Listen to own depot products ONLY
-            // Path: depots/{depotId}/products
             const userDepotId = currentUser.depotId;
             const prodRef = ref(db, `depots/${userDepotId}/products`);
-            
             const unsub = onValue(prodRef, (snapshot) => {
-                // If filter changed unexpectedly, stop
                 if(!currentUser || currentUser.role !== 'user') return;
-                
                 data.prods = [];
                 if(snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
                         const p = childSnapshot.val();
-                        p.key = childSnapshot.key; // This will be the Manual ID (e.g., "ASL")
-                        p.id = childSnapshot.key;   // Ensure ID is set to key
-                        p.depotId = userDepotId;   // Ensure depotId is attached
+                        p.key = childSnapshot.key;
+                        p.id = childSnapshot.key;
+                        p.depotId = userDepotId;
                         data.prods.push(p);
                     });
                 }
                 updateUI();
             });
             productListeners.push(unsub);
-
         } else if (currentUser.role === 'admin') {
-            // ADMIN: Logic depends on Filter
             if (currentDepotFilter === 'ALL') {
-                // ADMIN ALL: Listen to ALL depots.
                 const depotsRef = ref(db, 'depots');
                 const unsubDepots = onValue(depotsRef, (snapshot) => {
                     data.prods = [];
                     if(snapshot.exists()) {
-                        // For each depot found
                         snapshot.forEach((depotSnapshot) => {
                             const depotId = depotSnapshot.key;
                             const productsSnap = depotSnapshot.child('products');
                             if(productsSnap.exists()) {
                                 productsSnap.forEach((prodSnap) => {
                                     const p = prodSnap.val();
-                                    p.key = prodSnap.key; // Manual ID
+                                    p.key = prodSnap.key;
                                     p.id = prodSnap.key;
                                     p.depotId = depotId;
                                     data.prods.push(p);
@@ -1220,18 +1252,15 @@
                     updateUI();
                 });
                 productListeners.push(unsubDepots);
-
             } else {
-                // ADMIN SPECIFIC: Listen to specific depot
                 const specificDepotId = currentDepotFilter;
                 const prodRef = ref(db, `depots/${specificDepotId}/products`);
-                
                 const unsub = onValue(prodRef, (snapshot) => {
                     data.prods = [];
                     if(snapshot.exists()) {
                         snapshot.forEach((childSnapshot) => {
                             const p = childSnapshot.val();
-                            p.key = childSnapshot.key; // Manual ID
+                            p.key = childSnapshot.key;
                             p.id = childSnapshot.key;
                             p.depotId = specificDepotId;
                             data.prods.push(p);
@@ -1244,26 +1273,19 @@
         }
     }
 
-    // --- NEW: GIFT LISTENER LOGIC (DEPOT WISE + MANUAL ID SUPPORT) ---
-    // Structure: depots/{depotId}/gifts/{id}
     function initGiftListeners() {
-        // Clear current gifts from memory
         data.gifts = [];
 
         if (currentUser.role === 'user') {
-            // USER: Listen to own depot gifts ONLY
-            // Path: depots/{depotId}/gifts
             const userDepotId = currentUser.depotId;
             const giftRef = ref(db, `depots/${userDepotId}/gifts`);
-            
             const unsub = onValue(giftRef, (snapshot) => {
                 if(!currentUser || currentUser.role !== 'user') return;
-                
                 data.gifts = [];
                 if(snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
                         const p = childSnapshot.val();
-                        p.key = childSnapshot.key; // Manual ID
+                        p.key = childSnapshot.key;
                         p.id = childSnapshot.key;
                         p.depotId = userDepotId;
                         data.gifts.push(p);
@@ -1272,23 +1294,19 @@
                 updateUI();
             });
             giftListeners.push(unsub);
-
         } else if (currentUser.role === 'admin') {
-            // ADMIN: Logic depends on Filter
             if (currentDepotFilter === 'ALL') {
-                // ADMIN ALL: Listen to ALL depots.
                 const depotsRef = ref(db, 'depots');
                 const unsubDepots = onValue(depotsRef, (snapshot) => {
                     data.gifts = [];
                     if(snapshot.exists()) {
-                        // For each depot found
                         snapshot.forEach((depotSnapshot) => {
                             const depotId = depotSnapshot.key;
                             const giftsSnap = depotSnapshot.child('gifts');
                             if(giftsSnap.exists()) {
                                 giftsSnap.forEach((giftSnap) => {
                                     const p = giftSnap.val();
-                                    p.key = giftSnap.key; // Manual ID
+                                    p.key = giftSnap.key;
                                     p.id = giftSnap.key;
                                     p.depotId = depotId;
                                     data.gifts.push(p);
@@ -1299,18 +1317,15 @@
                     updateUI();
                 });
                 giftListeners.push(unsubDepots);
-
             } else {
-                // ADMIN SPECIFIC: Listen to specific depot
                 const specificDepotId = currentDepotFilter;
                 const giftRef = ref(db, `depots/${specificDepotId}/gifts`);
-                
                 const unsub = onValue(giftRef, (snapshot) => {
                     data.gifts = [];
                     if(snapshot.exists()) {
                         snapshot.forEach((childSnapshot) => {
                             const p = childSnapshot.val();
-                            p.key = childSnapshot.key; // Manual ID
+                            p.key = childSnapshot.key;
                             p.id = childSnapshot.key;
                             p.depotId = specificDepotId;
                             data.gifts.push(p);
@@ -1328,8 +1343,8 @@
         
         const fMpos = getFilteredData(data.mpos);
         const fDas = getFilteredData(data.das);
-        const fProds = data.prods; // Products are already depot-wise filtered
-        const fGifts = data.gifts; // Gifts are now also depot-wise filtered via initGiftListeners
+        const fProds = data.prods; 
+        const fGifts = data.gifts; 
         const fChallans = getFilteredData(data.challans);
         const fUsers = currentUser.role === 'admin' ? data.users : [];
 
@@ -1344,6 +1359,7 @@
         document.getElementById('d-total-prod-challan').innerText = prodChallans;
         document.getElementById('d-total-gift-challan').innerText = giftChallans;
 
+        // DASHBOARD CATEGORY STATS (OLD - MPO)
         let catStats = { 
             'A': { sales: 0, count: 0 }, 
             'B': { sales: 0, count: 0 }, 
@@ -1372,8 +1388,10 @@
         document.getElementById('cat-mpo-D').innerText = catStats['D'].count;
         document.getElementById('cat-mpo-E').innerText = catStats['E'].count;
 
+        // DASHBOARD CATEGORY STATS (NEW - CHALLAN)
+        window.renderDashboardChallanStats(fChallans);
+
         window.populateSelects(activeMpos, fDas);
-        
         window.renderMgmtTables(fMpos, fProds, fGifts, fDas, fUsers);
         window.renderChallans(fChallans, fMpos);
         
@@ -1390,7 +1408,6 @@
             select.value = currentVal;
         }
 
-        // Refresh lists if tab is active
         const mpoId = document.getElementById('gen-mpo').value;
         if(mpoId) window.loadMPODetails();
         const mpoIdGift = document.getElementById('gen-mpo-gift').value;
@@ -1399,6 +1416,38 @@
         const manualMpoId = document.getElementById('manual-mpo').value;
         if(manualMpoId) window.loadManualMPODetails();
     }
+
+    window.renderDashboardChallanStats = function(fChallans) {
+        const container = document.getElementById('dashboard-challan-stats');
+        const categories = ['A', 'B', 'C', 'D', 'E'];
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+
+        let html = '';
+
+        categories.forEach(cat => {
+            const challansInCat = fChallans.filter(c => {
+                const cDate = new Date(c.timestamp);
+                return c.mpoCat === cat && cDate.getMonth() === currentMonth && cDate.getFullYear() === currentYear;
+            });
+
+            const count = challansInCat.length;
+            const totalQty = challansInCat.reduce((sum, c) => {
+                return sum + c.items.reduce((iSum, i) => iSum + (Number(i.issueQty) || 0), 0);
+            }, 0);
+
+            html += `
+                <div class="card cat-stat-card type-${cat}">
+                    <small style="color:var(--accent); font-weight:bold;">CATEGORY ${cat} CHALLANS</small>
+                    <h2 style="margin: 10px 0;">${count}</h2>
+                    <p style="margin:0; font-size: 0.9rem;">Total Issued</p>
+                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                    <small>Quantity: <strong>${totalQty}</strong></small>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    };
 
     window.nav = function(id) {
         document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
@@ -1628,7 +1677,7 @@
         const id = document.getElementById('gen-mpo-gift').value;
         const fMpos = getFilteredData(data.mpos).filter(m => m.isActive !== false);
         const fDas = getFilteredData(data.das);
-        const fGifts = data.gifts; // Now loaded from initGiftListeners
+        const fGifts = data.gifts; 
         
         const details = document.getElementById('mpo-details-gift');
         const daSel = document.getElementById('gen-da-gift');
@@ -1725,15 +1774,11 @@
         loadGiftMPODetails();
     };
 
-    // --- UPDATED MANUAL GENERATOR LOGIC (NOW SUPPORTS PROD & GIFT) ---
     window.loadManualMPODetails = function() {
         const id = document.getElementById('manual-mpo').value;
-        const type = document.getElementById('manual-type-selector').value; // 'prod' or 'gift'
-        
+        const type = document.getElementById('manual-type-selector').value; 
         const fMpos = getFilteredData(data.mpos).filter(m => m.isActive !== false);
         const fDas = getFilteredData(data.das);
-        
-        // Source data based on type
         const sourceData = (type === 'gift') ? data.gifts : data.prods;
 
         const details = document.getElementById('manual-mpo-details');
@@ -1770,15 +1815,11 @@
         listContainer.innerHTML = '';
         manualSelections = {};
         
-        if(type === 'gift') {
-            listTitle.innerText = "All Gifts & Quantities";
-        } else {
-            listTitle.innerText = "All Products & Quantities";
-        }
+        if(type === 'gift') listTitle.innerText = "All Gifts & Quantities";
+        else listTitle.innerText = "All Products & Quantities";
 
         sourceData.forEach(p => {
             if (p.isActive === false || p.isActive === 'false') return;
-
             const div = document.createElement('div');
             div.className = 'product-list-item';
             div.innerHTML = `
@@ -1798,11 +1839,8 @@
 
     window.updateManualSelection = function(prodId, qtyVal) {
         const qty = parseInt(qtyVal);
-        if (qty && qty > 0) {
-            manualSelections[prodId] = qty;
-        } else {
-            delete manualSelections[prodId];
-        }
+        if (qty && qty > 0) manualSelections[prodId] = qty;
+        else delete manualSelections[prodId];
         updateCount('manual');
     };
 
@@ -1813,17 +1851,13 @@
 
     window.generateManualChallan = function() {
         if(!currentMPO || Object.keys(manualSelections).length === 0) return;
-
-        const type = document.getElementById('manual-type-selector').value; // 'prod' or 'gift'
+        const type = document.getElementById('manual-type-selector').value; 
         const fItems = (type === 'gift') ? data.gifts : data.prods;
-        
         const itemsArray = [];
         
         for (const [pid, qty] of Object.entries(manualSelections)) {
             const p = fItems.find(x => x.id === pid);
-            if(p) {
-                itemsArray.push({ ...p, issueQty: qty });
-            }
+            if(p) itemsArray.push({ ...p, issueQty: qty });
         }
 
         const daId = document.getElementById('manual-da').value;
@@ -1834,13 +1868,8 @@
         let depotCode = "KS"; 
         let assignedDepotId = currentUser.depotId; 
         
-        if (currentUser.role === 'admin') {
-            assignedDepotId = currentMPO.depotId || 'ALL'; 
-        }
-
-        if(assignedDepotId && assignedDepotId !== 'ALL') {
-            depotCode = assignedDepotId.substring(0, 2).toUpperCase();
-        }
+        if (currentUser.role === 'admin') assignedDepotId = currentMPO.depotId || 'ALL'; 
+        if(assignedDepotId && assignedDepotId !== 'ALL') depotCode = assignedDepotId.substring(0, 2).toUpperCase();
 
         const dateCode = `${year}${month}`;
         const basePrefix = `${depotCode}${dateCode}`;
@@ -1858,21 +1887,20 @@
         const newSerial = maxSerial + 1;
         const serialStr = newSerial.toString().padStart(3, '0');
         const challanNo = `${basePrefix}${serialStr}`;
-        
         const cat = currentMPO.categoryProd || currentMPO.category || 'A';
 
         const newChallan = {
             id: challanNo,
             date: dateObj.toLocaleDateString('en-GB'),
             timestamp: Date.now(),
-            type: type === 'gift' ? 'Gift' : 'Product', // Save actual type
+            type: type === 'gift' ? 'Gift' : 'Product',
             isManual: true,
             mpoId: currentMPO.id,
             mpoName: currentMPO.name,
             mpoTerritory: currentMPO.territory,
             mpoArea: currentMPO.area || '', 
             mpoRegion: currentMPO.region || '', 
-            mpoCat: cat, // Keep original category for reporting
+            mpoCat: cat,
             mpoSales: currentMPO.sales,
             daId: daId,
             items: itemsArray,
@@ -1886,12 +1914,11 @@
             window.nav('challans');
         }).catch(err => showToast("Error: " + err.message));
     };
-    // --- END MANUAL GENERATOR LOGIC ---
 
     window.generateChallan = function(type) {
         let itemsArray = [];
-        let fProds = data.prods; // Already depot-filtered
-        let fGifts = data.gifts; // Already depot-filtered via initGiftListeners
+        let fProds = data.prods; 
+        let fGifts = data.gifts; 
 
         if(type === 'prod') {
             if(!currentMPO || selectedProducts.size === 0) return;
@@ -1902,7 +1929,6 @@
         }
 
         const daId = type === 'gift' ? document.getElementById('gen-da-gift').value : document.getElementById('gen-da').value;
-
         const dateObj = new Date();
         const year = dateObj.getFullYear();
         const month = ("0" + (dateObj.getMonth() +1)).slice(-2);
@@ -1910,13 +1936,8 @@
         let depotCode = "KS"; 
         let assignedDepotId = currentUser.depotId; 
         
-        if (currentUser.role === 'admin') {
-            assignedDepotId = currentMPO.depotId || 'ALL'; 
-        }
-
-        if(assignedDepotId && assignedDepotId !== 'ALL') {
-            depotCode = assignedDepotId.substring(0, 2).toUpperCase();
-        }
+        if (currentUser.role === 'admin') assignedDepotId = currentMPO.depotId || 'ALL'; 
+        if(assignedDepotId && assignedDepotId !== 'ALL') depotCode = assignedDepotId.substring(0, 2).toUpperCase();
 
         const dateCode = `${year}${month}`;
         const basePrefix = `${depotCode}${dateCode}`;
@@ -1934,13 +1955,9 @@
         const newSerial = maxSerial + 1;
         const serialStr = newSerial.toString().padStart(3, '0');
         const challanNo = `${basePrefix}${serialStr}`;
-        
         let cat = '';
-        if(type === 'prod') {
-            cat = currentMPO.categoryProd || currentMPO.category || 'A';
-        } else {
-            cat = currentMPO.categoryGift || 'A';
-        }
+        if(type === 'prod') cat = currentMPO.categoryProd || currentMPO.category || 'A';
+        else cat = currentMPO.categoryGift || 'A';
 
         const items = itemsArray.map(item => {
             let qty = 0;
@@ -1950,7 +1967,6 @@
             else if(cat === 'D') qty = item.qtyD || 0;
             else if(cat === 'E') qty = item.qtyE || 0;
             else qty = 0;
-            
             return { ...item, issueQty: qty };
         });
 
@@ -2003,6 +2019,7 @@
     };
 
     window.clearChallanFilters = function() {
+        document.getElementById('filter-date').value = "";
         document.getElementById('filter-depot').value = "";
         document.getElementById('filter-category').value = "";
         document.getElementById('filter-mpo').value = "";
@@ -2010,12 +2027,48 @@
         window.renderChallans();
     }
 
-    // --- FIXED PRINT FUNCTION ---
+    // --- NEW: VIEW CHALLAN DETAILS ---
+    window.viewChallanDetails = function(key) {
+        const c = data.challans.find(x => x.key === key);
+        if(!c) return;
+
+        const da = data.das.find(d => d.id === c.daId) || {name: 'N/A'};
+        
+        document.getElementById('vc-mpo-name').innerText = c.mpoName;
+        document.getElementById('vc-mpo-id').innerText = c.mpoId;
+        document.getElementById('vc-territory').innerText = c.mpoTerritory;
+        document.getElementById('vc-da-name').innerText = da.name;
+        document.getElementById('vc-date').innerText = c.date;
+        document.getElementById('vc-type').innerText = c.type + (c.isManual ? " (Manual)" : "");
+
+        const tbody = document.getElementById('vc-items-body');
+        tbody.innerHTML = '';
+        c.items.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.pack}</td>
+                    <td style="text-align:right">${item.issueQty}</td>
+                    <td>${item.unit}</td>
+                </tr>
+            `;
+        });
+
+        // Setup print button inside modal
+        const printBtn = document.getElementById('vc-print-btn');
+        printBtn.onclick = function() {
+            document.getElementById('view-challan-modal').style.display = 'none';
+            window.printChallan(key, c.type);
+        };
+
+        document.getElementById('view-challan-modal').style.display = 'flex';
+    };
+
     window.printChallan = function(key, type) {
         const c = data.challans.find(x => x.key === key);
         if(!c) return;
         
-        // APPLY DEFAULT 10.5PT EPSON ROMAN SETTINGS BEFORE PRINTING
         document.documentElement.style.setProperty('--print-font-family', "'Epson Roman', 'Epson Roman T', 'Times New Roman', serif");
         document.documentElement.style.setProperty('--print-font-size', "10.5pt");
 
@@ -2048,7 +2101,6 @@
         });
         document.getElementById('p-total-qty').innerText = totalQty;
         
-        // IMMEDIATE PRINT
         window.print();
     };
 
@@ -2062,28 +2114,19 @@
 
         const depotSel = document.getElementById('filter-depot');
         const currentDepotVal = depotSel.value;
-        
         depotSel.innerHTML = '<option value="">All Depots</option>';
-        Array.from(availableDepots).sort().forEach(depot => {
-             depotSel.innerHTML += `<option value="${depot}">${depot}</option>`;
-        });
+        Array.from(availableDepots).sort().forEach(depot => depotSel.innerHTML += `<option value="${depot}">${depot}</option>`);
         depotSel.value = currentDepotVal;
 
         let availableMpos = fMpos;
-        if (depotSel.value) {
-            availableMpos = fMpos.filter(m => m.depotId === depotSel.value);
-        }
+        if (depotSel.value) availableMpos = fMpos.filter(m => m.depotId === depotSel.value);
 
         const mpoSel = document.getElementById('filter-mpo');
         const currentMpoVal = mpoSel.value;
         mpoSel.innerHTML = '<option value="">All MPOs</option>';
-        
         if (availableMpos && availableMpos.length) {
-            availableMpos.forEach(m => {
-                mpoSel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
-            });
+            availableMpos.forEach(m => mpoSel.innerHTML += `<option value="${m.id}">${m.name}</option>`);
         }
-        
         const optionExists = Array.from(mpoSel.options).some(o => o.value === currentMpoVal);
         mpoSel.value = optionExists ? currentMpoVal : "";
 
@@ -2092,20 +2135,27 @@
         const challanFilter = document.getElementById('filter-challan-no').value.trim().toLowerCase();
         const categoryFilter = document.getElementById('filter-category').value;
         const viewMode = document.getElementById('view-mode').value;
+        const dateFilter = document.getElementById('filter-date').value; // NEW
 
         const list = fChallans.filter(c => {
             const matchesMPO = !mpoFilter || c.mpoId === mpoFilter;
             const matchesDepot = !depotFilter || c.depotId === depotFilter;
             const matchesChallan = !challanFilter || c.id.toLowerCase().includes(challanFilter);
             const matchesCategory = !categoryFilter || c.mpoCat === categoryFilter;
-            return matchesMPO && matchesDepot && matchesChallan && matchesCategory;
+            
+            let matchesDate = true;
+            if(dateFilter) {
+                const cDate = new Date(c.timestamp);
+                const cDateStr = cDate.toISOString().split('T')[0];
+                if (cDateStr !== dateFilter) matchesDate = false;
+            }
+
+            return matchesMPO && matchesDepot && matchesChallan && matchesCategory && matchesDate;
         }).sort((a, b) => {
             const areaA = (a.mpoArea || '').toLowerCase();
             const areaB = (b.mpoArea || '').toLowerCase();
-            
             if (areaA < areaB) return -1;
             if (areaA > areaB) return 1;
-            
             return b.timestamp - a.timestamp;
         });
 
@@ -2132,7 +2182,7 @@
                                     <th>MPO Name</th>
                                     <th>Area</th>
                                     <th width="60">Items</th>
-                                    <th width="160">Actions</th>
+                                    <th width="200">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -2140,14 +2190,9 @@
                 list.forEach(c => {
                     const da = data.das.find(d => d.id === c.daId) || {name:'N/A'};
                     let typeBadge = '';
-                    
-                    if(c.isManual) {
-                        typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
-                    } else if (c.type === 'Gift') {
-                        typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
-                    } else {
-                        typeBadge = '<span style="background:var(--accent); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Prod</span>';
-                    }
+                    if(c.isManual) typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
+                    else if (c.type === 'Gift') typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
+                    else typeBadge = '<span style="background:var(--accent); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Prod</span>';
                     
                     html += `
                         <tr>
@@ -2158,8 +2203,9 @@
                             <td>${c.mpoArea || '-'}</td>
                             <td style="text-align:center">${c.items.length}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary" onclick="window.printChallan('${c.key}', '${c.type}')"><i class="fa-solid fa-print"></i> Print</button>
-                                <button class="btn btn-sm btn-danger" onclick="window.deleteChallan('${c.key}')"><i class="fa-solid fa-trash"></i></button>
+                                <button class="btn btn-sm btn-secondary" onclick="window.viewChallanDetails('${c.key}')" title="View Items"><i class="fa-solid fa-eye"></i></button>
+                                <button class="btn btn-sm btn-primary" onclick="window.printChallan('${c.key}', '${c.type}')" title="Print"><i class="fa-solid fa-print"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="window.deleteChallan('${c.key}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>`;
                 });
@@ -2200,7 +2246,7 @@
                                             <th>MPO Name</th>
                                             <th>Area</th>
                                             <th width="60">Items</th>
-                                            <th width="160">Actions</th>
+                                            <th width="200">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>`;
@@ -2208,14 +2254,9 @@
                     monthChallans.forEach(c => {
                         const da = data.das.find(d => d.id === c.daId) || {name:'N/A'};
                         let typeBadge = '';
-                        
-                        if(c.isManual) {
-                            typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
-                        } else if (c.type === 'Gift') {
-                            typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
-                        } else {
-                            typeBadge = '<span style="background:var(--accent); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Prod</span>';
-                        }
+                        if(c.isManual) typeBadge = '<span style="background:var(--warning); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Manual</span>';
+                        else if (c.type === 'Gift') typeBadge = '<span style="background:var(--purple); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Gift</span>';
+                        else typeBadge = '<span style="background:var(--accent); color:white; padding:4px 8px; border-radius:12px; font-size:0.75rem;">Prod</span>';
 
                         html += `
                             <tr>
@@ -2226,8 +2267,9 @@
                                 <td>${c.mpoArea || '-'}</td>
                                 <td style="text-align:center">${c.items.length}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="window.printChallan('${c.key}', '${c.type}')"><i class="fa-solid fa-print"></i> Print</button>
-                                    <button class="btn btn-sm btn-danger" onclick="window.deleteChallan('${c.key}')"><i class="fa-solid fa-trash"></i></button>
+                                    <button class="btn btn-sm btn-secondary" onclick="window.viewChallanDetails('${c.key}')" title="View Items"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn btn-sm btn-primary" onclick="window.printChallan('${c.key}', '${c.type}')" title="Print"><i class="fa-solid fa-print"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="window.deleteChallan('${c.key}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>`;
                     });
@@ -2267,7 +2309,6 @@
         });
     };
 
-    // --- NEW EXPORT STOCK TO EXCEL FUNCTION ---
     window.exportStockToExcel = function() {
         const fProds = data.prods; 
         const fGifts = data.gifts;
@@ -2331,10 +2372,8 @@
             const rows = screenTable.querySelectorAll('tbody tr');
             rows.forEach(row => {
                 const closingCell = row.lastElementChild; 
-                
                 if (closingCell) {
                     const closingValue = parseFloat(closingCell.innerText);
-                    
                     if (closingValue > 0) {
                         printTbody.innerHTML += row.innerHTML.replace(/color:\s*(\w+|#\w+);?/gi, '');
                     }
@@ -2480,7 +2519,6 @@
             const toggleBtnColor = (p.isActive === false || p.isActive === 'false') ? 'var(--success)' : 'var(--danger)';
             const toggleIcon = (p.isActive === false || p.isActive === 'false') ? 'fa-toggle-on' : 'fa-toggle-off';
             
-            // NEW: Gift Category Edit Button (Purple)
             const btnPurple = `<button class="btn btn-sm btn-purple" onclick="window.openModal('editGiftCategory','${p.id}')" title="Edit Category"><i class="fa-solid fa-edit"></i> Cat</button>`;
 
             giftT.innerHTML += `
@@ -2524,7 +2562,6 @@
         if(!product) return;
         const depotId = product.depotId;
         if(!depotId) return showToast("Error: Product has no Depot ID");
-
         const newStatus = !(product.isActive === true || product.isActive === 'true');
         update(ref(db, `depots/${depotId}/products/${id}`), { isActive: newStatus }).then(() => showToast(`Product marked as ${newStatus?'Active':'Inactive'}`)).catch(err => showToast("Error updating status"));
     }
@@ -2534,9 +2571,7 @@
         if(!gift) return;
         const depotId = gift.depotId;
         if(!depotId) return showToast("Error: Gift has no Depot ID");
-
         const newStatus = !(gift.isActive === true || gift.isActive === 'true');
-        // UPDATED: Use new Depot Wise Path
         update(ref(db, `depots/${depotId}/gifts/${id}`), { isActive: newStatus }).then(() => showToast(`Gift marked as ${newStatus?'Active':'Inactive'}`)).catch(err => showToast("Error updating status"));
     }
 
@@ -2597,7 +2632,6 @@
             }
         };
 
-        // --- PRODUCT CATEGORY EDIT LOGIC ---
         if (type === 'editCategory') {
             const p = data.prods.find(x => x.id === id);
             if (!p) return;
@@ -2637,7 +2671,6 @@
             return; 
         }
 
-        // --- NEW: GIFT CATEGORY EDIT LOGIC ---
         if (type === 'editGiftCategory') {
             const p = data.gifts.find(x => x.id === id);
             if (!p) return;
@@ -2712,10 +2745,7 @@
         } else if (type === 'prod' || type === 'gift') {
             const statusField = `<div class="form-group"><label>Status</label><select name="isActive"><option value="true">Active</option><option value="false">Inactive</option></select></div>`;
             
-            // --- FIX: MANUAL ID INPUT LOGIC ---
-            // Check if we have a valid ID (string) to edit. If undefined or null, we are Adding New.
             const isEdit = (editId && editId.length > 0);
-            // If editing: readonly. If adding: required, empty, no gray background.
             const idInputState = isEdit ? 'readonly' : 'required';
             const idInputStyle = isEdit ? 'background-color: #f8f9fa; font-weight:bold;' : '';
             const idField = `
@@ -2770,7 +2800,6 @@
              if(!item) return;
              item.id = item.username; 
         } else if (type === 'gift') {
-            // Find in local gift array
             item = data.gifts.find(x => x.id === id);
         } else {
             const sourceArr = type==='mpo'?data.mpos:type==='da'?data.das:data.prods;
@@ -2807,7 +2836,6 @@
             path = `depots/${prod.depotId}/products/${id}`;
         }
         else if(type === 'gift') {
-            // UPDATED: Delete from new Depot Wise Path
             const gift = data.gifts.find(g => g.id === id);
             if(!gift || !gift.depotId) return showToast("Error: Cannot find gift path");
             path = `depots/${gift.depotId}/gifts/${id}`;
@@ -2816,7 +2844,6 @@
         remove(ref(db, path)).then(() => showToast("Record Deleted"));
     };
 
-    // --- UPDATED SAVE MODAL DATA (SUPPORTS MANUAL ID & DEPOT & GIFT) ---
     window.saveModalData = function(e) {
         e.preventDefault();
         const form = e.target;
@@ -2824,7 +2851,6 @@
         const obj = {};
         formData.forEach((value, key) => obj[key] = value);
 
-        // 1. EDIT CATEGORY LOGIC (PRODUCTS)
         if(editType === 'editCategory') {
             const depotId = obj.depotId;
             if(!depotId) return showToast("Depot ID missing");
@@ -2845,7 +2871,6 @@
             return; 
         }
 
-        // 2. EDIT CATEGORY LOGIC (GIFTS - NEW)
         if(editType === 'editGiftCategory') {
             const depotId = obj.depotId;
             if(!depotId) return showToast("Depot ID missing");
@@ -2857,7 +2882,6 @@
                 qtyD: Number(form.qtyD.value),
                 qtyE: Number(form.qtyE.value)
             };
-            // UPDATED: Use new path
             update(ref(db, `depots/${depotId}/gifts/${editId}`), updateObj)
                 .then(() => {
                     showToast("Gift Categories Updated Successfully");
@@ -2867,7 +2891,6 @@
             return; 
         }
 
-        // 3. ADD STOCK LOGIC
         if(editType === 'addStock') {
             const addedStock = Number(obj.stockToAdd);
             const product = data.prods.find(p => p.id === editId);
@@ -2886,24 +2909,20 @@
             return; 
         }
 
-        // 4. PRODUCT SAVE LOGIC (MANUAL ID)
         if(editType === 'prod') {
             const depotId = obj.depotId;
-            const customId = obj.id ? String(obj.id).trim() : null; // Get manual ID (e.g., "ASL")
+            const customId = obj.id ? String(obj.id).trim() : null;
             
             if(!depotId) return showToast("Depot ID is required for products");
             if(!customId) return showToast("Product ID is required");
             
             if (!editId) {
-                // NEW PRODUCT: Use SET with Custom ID
                 obj.id = customId;
                 set(ref(db, `depots/${depotId}/products/${customId}`), obj).then(() => {
                     showToast("Product Added Successfully");
                     closeModal();
                 }).catch(err => showToast("Error Saving: " + err.message));
             } else {
-                // EDIT PRODUCT
-                // Update data but keep Key (ID) same
                 obj.id = editId; 
                 update(ref(db, `depots/${depotId}/products/${editId}`), obj).then(() => {
                     showToast("Product Updated Successfully");
@@ -2913,26 +2932,21 @@
             return;
         }
 
-        // 5. GIFT SAVE LOGIC (MANUAL ID - NEW STRUCTURE)
         if(editType === 'gift') {
             const depotId = obj.depotId;
-            const customId = obj.id ? String(obj.id).trim() : null; // Get manual ID
+            const customId = obj.id ? String(obj.id).trim() : null;
             
             if(!depotId) return showToast("Depot ID is required for gifts");
             if(!customId) return showToast("Gift ID is required");
             
             if (!editId) {
-                // NEW GIFT: Use SET with Custom ID in Depot Wise Path
                 obj.id = customId;
-                // UPDATED: Path changed to depots/{depotId}/gifts
                 set(ref(db, `depots/${depotId}/gifts/${customId}`), obj).then(() => {
                     showToast("Gift Added Successfully");
                     closeModal();
                 }).catch(err => showToast("Error Saving: " + err.message));
             } else {
-                // EDIT GIFT
                 obj.id = editId;
-                // UPDATED: Path changed to depots/{depotId}/gifts
                 update(ref(db, `depots/${depotId}/gifts/${editId}`), obj).then(() => {
                     showToast("Gift Updated Successfully");
                     closeModal();
@@ -2941,9 +2955,7 @@
             return;
         }
 
-        // 6. OTHER TYPES (MPO, DA, USER)
         if(obj.sales) obj.sales = Number(obj.sales);
-        
         if(obj.qtyA) { 
             obj.qtyA = Number(obj.qtyA); 
             obj.qtyB = Number(obj.qtyB); 
@@ -2951,9 +2963,7 @@
             obj.qtyD = Number(obj.qtyD); 
             obj.qtyE = Number(obj.qtyE); 
         }
-        
         if(obj.receivedStock) obj.receivedStock = Number(obj.receivedStock);
-        
         if(obj.isActive !== undefined) {
             obj.isActive = obj.isActive === 'true' || obj.isActive === true;
         }
@@ -3050,7 +3060,6 @@
         table.innerHTML += tbody;
     }
 
-    // --- UPDATED EXCEL UPLOAD (SUPPORTS MANUAL ID & DEPOT & GIFT STRUCTURE) ---
     window.confirmExcelUpload = function() {
         if(!uploadType || parsedExcelData.length === 0) return;
 
@@ -3081,10 +3090,9 @@
                             qtyE: Number(row['QtyE'] || row['qtyE'] || 0),
                             depotId: (row['DepotId'] || row['depotId']) || currentDepot,
                             isActive: row['isActive'] !== undefined ? (row['isActive'] === true || row['isActive'] === 'true') : true,
-                            id: id // Manual ID from Excel
+                            id: id
                         };
 
-                        // Use SET with Manual ID at depot path
                         await set(ref(db, `depots/${item.depotId}/products/${id}`), item);
                         count++;
                     }
@@ -3134,7 +3142,6 @@
                             isActive: row['isActive'] !== undefined ? (row['isActive'] === true || row['isActive'] === 'true') : true
                         };
                         
-                        // UPDATED: Use SET with Manual ID at NEW Depot Wise Path
                         await set(ref(db, `depots/${item.depotId}/gifts/${id}`), item);
                         count++;
                     }
@@ -3172,7 +3179,6 @@
         }
     }
 
-    // --- GLOBAL MOBILE MENU TOGGLE FUNCTION ---
     window.toggleMobileMenu = function() {
         const menu = document.getElementById('mobile-nav');
         if (menu) {
