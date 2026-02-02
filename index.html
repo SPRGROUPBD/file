@@ -513,17 +513,7 @@
             </div>
         </div>
 
-        <!-- DASHBOARD CATEGORY WISE CHALLAN VIEW (NEW) -->
-        <div class="panel">
-            <div class="panel-header">
-                <h3>Challan Stats (By Category)</h3>
-                <small>Current Month View</small>
-            </div>
-            <div class="dashboard-grid" id="dashboard-challan-stats">
-                <!-- Injected via JS -->
-            </div>
-        </div>
-
+        <!-- MPO CATEGORY OVERVIEW -->
         <div class="panel">
             <div class="panel-header">
                 <h3>MPO Category Overview (Based on Sales)</h3>
@@ -564,6 +554,28 @@
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     <small>MPOs: <strong id="cat-mpo-E">0</strong></small>
                 </div>
+            </div>
+        </div>
+
+        <!-- CHALLAN STATS (PROD) -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Challan Stats (By Category) PROD</h3>
+                <small>Current Month View</small>
+            </div>
+            <div class="dashboard-grid" id="dashboard-prod-stats">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- CHALLAN STATS (GIFT) -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Challan Stats (By Category) GIFT</h3>
+                <small>Current Month View</small>
+            </div>
+            <div class="dashboard-grid" id="dashboard-gift-stats">
+                <!-- Injected via JS -->
             </div>
         </div>
     </section>
@@ -1388,7 +1400,7 @@
         document.getElementById('cat-mpo-D').innerText = catStats['D'].count;
         document.getElementById('cat-mpo-E').innerText = catStats['E'].count;
 
-        // DASHBOARD CATEGORY STATS (NEW - CHALLAN)
+        // DASHBOARD CATEGORY STATS (NEW - CHALLAN - SPLIT INTO PROD & GIFT)
         window.renderDashboardChallanStats(fChallans);
 
         window.populateSelects(activeMpos, fDas);
@@ -1418,35 +1430,48 @@
     }
 
     window.renderDashboardChallanStats = function(fChallans) {
-        const container = document.getElementById('dashboard-challan-stats');
+        const prodContainer = document.getElementById('dashboard-prod-stats');
+        const giftContainer = document.getElementById('dashboard-gift-stats');
         const categories = ['A', 'B', 'C', 'D', 'E'];
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
 
-        let html = '';
+        // Helper to generate cards HTML
+        const generateCards = (type) => {
+            let html = '';
+            categories.forEach(cat => {
+                const challansInCat = fChallans.filter(c => {
+                    const cDate = new Date(c.timestamp);
+                    // Check Type, Category, Month, Year
+                    return c.type === type && 
+                           c.mpoCat === cat && 
+                           cDate.getMonth() === currentMonth && 
+                           cDate.getFullYear() === currentYear;
+                });
 
-        categories.forEach(cat => {
-            const challansInCat = fChallans.filter(c => {
-                const cDate = new Date(c.timestamp);
-                return c.mpoCat === cat && cDate.getMonth() === currentMonth && cDate.getFullYear() === currentYear;
+                const count = challansInCat.length;
+                const totalQty = challansInCat.reduce((sum, c) => {
+                    return sum + c.items.reduce((iSum, i) => iSum + (Number(i.issueQty) || 0), 0);
+                }, 0);
+
+                // Color customization for the small badge
+                const badgeColor = type === 'Product' ? 'var(--accent)' : 'var(--purple)';
+
+                html += `
+                    <div class="card cat-stat-card type-${cat}">
+                        <small style="color:${badgeColor}; font-weight:bold;">CATEGORY ${cat} (${type})</small>
+                        <h2 style="margin: 10px 0;">${count}</h2>
+                        <p style="margin:0; font-size: 0.9rem;">Total Issued</p>
+                        <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                        <small>Quantity: <strong>${totalQty}</strong></small>
+                    </div>
+                `;
             });
+            return html;
+        };
 
-            const count = challansInCat.length;
-            const totalQty = challansInCat.reduce((sum, c) => {
-                return sum + c.items.reduce((iSum, i) => iSum + (Number(i.issueQty) || 0), 0);
-            }, 0);
-
-            html += `
-                <div class="card cat-stat-card type-${cat}">
-                    <small style="color:var(--accent); font-weight:bold;">CATEGORY ${cat} CHALLANS</small>
-                    <h2 style="margin: 10px 0;">${count}</h2>
-                    <p style="margin:0; font-size: 0.9rem;">Total Issued</p>
-                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                    <small>Quantity: <strong>${totalQty}</strong></small>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
+        prodContainer.innerHTML = generateCards('Product');
+        giftContainer.innerHTML = generateCards('Gift');
     };
 
     window.nav = function(id) {
