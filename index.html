@@ -740,7 +740,7 @@
                         </select>
                     </div>
 
-                    <!-- DATE FILTER (NEW) -->
+                    <!-- DATE FILTER -->
                     <div style="display:flex; align-items:center; gap:5px;">
                         <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Date:</label>
                         <input type="date" id="filter-date" style="width: 140px; padding: 5px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px;" onchange="window.renderChallans()">
@@ -751,6 +751,17 @@
                         <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Depot:</label>
                         <select id="filter-depot" style="width: 120px; font-size: 0.9rem;" onchange="window.renderChallans()">
                             <option value="">All Depots</option>
+                        </select>
+                    </div>
+
+                    <!-- CHALLAN TYPE FILTER (NEW) -->
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Type:</label>
+                        <select id="filter-type" style="width: 120px; font-size: 0.9rem;" onchange="window.renderChallans()">
+                            <option value="">All Types</option>
+                            <option value="Product">Product</option>
+                            <option value="Gift">Gift</option>
+                            <option value="Manual">Manual</option>
                         </select>
                     </div>
 
@@ -2086,6 +2097,7 @@
     window.clearChallanFilters = function() {
         document.getElementById('filter-date').value = "";
         document.getElementById('filter-depot').value = "";
+        document.getElementById('filter-type').value = ""; // NEW RESET
         document.getElementById('filter-category').value = "";
         document.getElementById('filter-mpo').value = "";
         document.getElementById('filter-challan-no').value = "";
@@ -2200,7 +2212,10 @@
         const challanFilter = document.getElementById('filter-challan-no').value.trim().toLowerCase();
         const categoryFilter = document.getElementById('filter-category').value;
         const viewMode = document.getElementById('view-mode').value;
-        const dateFilter = document.getElementById('filter-date').value; // NEW
+        const dateFilter = document.getElementById('filter-date').value;
+        
+        // NEW: Get Type Filter
+        const typeFilter = document.getElementById('filter-type').value;
 
         const list = fChallans.filter(c => {
             const matchesMPO = !mpoFilter || c.mpoId === mpoFilter;
@@ -2215,7 +2230,18 @@
                 if (cDateStr !== dateFilter) matchesDate = false;
             }
 
-            return matchesMPO && matchesDepot && matchesChallan && matchesCategory && matchesDate;
+            // NEW: Type Filtering Logic
+            let matchesType = true;
+            if (typeFilter) {
+                if (typeFilter === 'Manual') {
+                    matchesType = c.isManual === true;
+                } else {
+                    // For Product or Gift, ensure it is NOT manual AND matches type
+                    matchesType = !c.isManual && c.type === typeFilter;
+                }
+            }
+
+            return matchesMPO && matchesDepot && matchesChallan && matchesCategory && matchesDate && matchesType;
         }).sort((a, b) => {
             const areaA = (a.mpoArea || '').toLowerCase();
             const areaB = (b.mpoArea || '').toLowerCase();
