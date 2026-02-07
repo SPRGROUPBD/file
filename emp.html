@@ -100,7 +100,6 @@
         padding: 10px;
     }
     .id-card {
-        /* Changed to 100% width with max-width for mobile responsiveness */
         width: 100%; 
         max-width: 360px; 
         background: #fff;
@@ -110,7 +109,7 @@
         border: 1px solid #e0e0e0;
         text-align: center;
         position: relative;
-        margin: 0 auto; /* Center it */
+        margin: 0 auto; 
     }
     .id-header {
         background: #2c3e50;
@@ -197,7 +196,7 @@
 
     /* Toast Notification */
     .toast {
-        visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        visibility: hidden; min-width: 280px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
     .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
     @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
@@ -217,7 +216,7 @@
 </head>
 <body>
 
-    <nav class="top-nav">
+    <nav class="top-nav" id="mainNav">
         <h2>MPO Portal</h2>
         <div>
             <button class="nav-btn active" onclick="showTab('overview')">Overview</button>
@@ -335,8 +334,8 @@
         <!-- 4. SCAN QR SECTION -->
         <div id="scan-section" class="section">
             <div class="form-box" style="text-align: center;">
-                <h3>Scan Employee QR</h3>
-                <p style="color:#777; margin-bottom:20px; font-size:13px;">Point camera at the QR code to view ID Card.</p>
+                <h3 id="scanTitle">Scan Employee QR</h3>
+                <p id="scanDesc" style="color:#777; margin-bottom:20px; font-size:13px;">Point camera at the QR code to view ID Card.</p>
                 <div id="reader"></div>
                 <div id="scanResult" class="scan-result-box">
                     <!-- ID Card will be injected here -->
@@ -466,6 +465,40 @@
             address: 'Monico Pharma Ltd Head Office',
             tel: '+880 1700000000'
         };
+
+        // --- NEW: URL PARAMETER CHECK ---
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if(id) {
+                // If URL has ?id=..., load employee data directly
+                fetchAndShowCard(id);
+                // Hide Nav for clean public view (Optional, keeping it now)
+                // document.getElementById('mainNav').style.display = 'none'; 
+            }
+        });
+
+        function fetchAndShowCard(id) {
+            // Switch to scan section visually but hide scanner elements
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('scan-section').classList.add('active');
+            
+            // Hide camera and change title
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('scanTitle').innerText = "Employee ID Card";
+            document.getElementById('scanDesc').style.display = 'none';
+
+            // Fetch Data
+            mpoRef.child(id).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    showIdCard(data);
+                } else {
+                    document.getElementById('scanResult').innerHTML = '<h3 style="color:red">Employee Not Found</h3><button class="btn btn-green" onclick="window.location.href=window.location.pathname">Go Home</button>';
+                    document.getElementById('scanResult').style.display = 'block';
+                }
+            });
+        }
 
         // --- TOAST FUNCTION ---
         function showToast(message) {
@@ -641,10 +674,9 @@
         let html5QrcodeScanner;
         
         function onScanSuccess(decodedText, decodedResult) {
-            // Stop scanning immediately
             if(html5QrcodeScanner) {
                 html5QrcodeScanner.clear();
-                html5QrcodeScanner = null; // Nullify to ensure we can restart cleanly
+                html5QrcodeScanner = null; 
             }
             
             try {
@@ -662,7 +694,6 @@
             const statusColor = data.status === 'Active' ? '#27ae60' : '#e74c3c';
             const imgUrl = data.url || 'https://picsum.photos/seed/'+data.code+'/200/200';
             
-            // Use companySettings from global variable
             const compLogo = companySettings.logo || '';
             const compSig = companySettings.signature || '';
             const compAddr = companySettings.address || 'N/A';
@@ -715,7 +746,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-green" style="max-width:200px; margin: 20px auto 0; display:block; background:#2c3e50; border-radius:50px;" onclick="resetScanner()">Scan Again</button>
+                <button class="btn btn-green" style="max-width:200px; margin: 20px auto 0; display:block; background:#2c3e50; border-radius:50px;" onclick="window.location.href=window.location.pathname">Back to Home</button>
             `;
             container.innerHTML = html;
             container.style.display = 'block';
@@ -725,23 +756,26 @@
             const container = document.getElementById('scanResult');
             container.style.display = 'none';
             container.innerHTML = '';
+            // Reset UI text
+            document.getElementById('scanTitle').innerText = "Scan Employee QR";
+            document.getElementById('scanDesc').style.display = 'block';
+            document.getElementById('reader').style.display = 'block';
             initScanner();
         }
 
         function initScanner() {
-            // Small delay to allow DOM to clear
             setTimeout(() => {
                 html5QrcodeScanner = new Html5QrcodeScanner(
                     "reader",
                     { fps: 10, qrbox: {width: 250, height: 250} },
-                    /* verbose= */ false);
+                    false);
                 html5QrcodeScanner.render(onScanSuccess, (errorMessage) => {
-                    // parse error, ignore it usually as it fires every frame
+                    // parse error, ignore
                 });
             }, 500);
         }
 
-        // --- UPLOAD EMPLOYEE ---
+        // --- UPLOAD EMPLOYEE (Updated with Link Generation) ---
         function handleUpload(e) {
             e.preventDefault();
             const file = document.getElementById('upFile').files[0];
@@ -779,7 +813,14 @@
                         status: 'Active'
                     };
                     return mpoRef.push(data);
-                }).then(() => {
+                }).then((ref) => {
+                    // Generate Link
+                    const baseUrl = window.location.href.split('?')[0];
+                    const uniqueLink = baseUrl + "?id=" + ref.key;
+                    
+                    // Prompt user to copy link
+                    window.prompt("Employee Saved! Copy the link below to view ID Card:", uniqueLink);
+                    
                     showToast("Saved Successfully!");
                     document.getElementById('uploadForm').reset();
                     progressWrapper.style.display = 'none';
@@ -847,6 +888,17 @@
             } 
         }
         function showTab(id) {
+            // Reset Scan Section UI if leaving it via tabs
+            if(id !== 'scan-section') {
+                 document.getElementById('reader').style.display = 'none';
+                 document.getElementById('scanTitle').innerText = "Scan Employee QR";
+                 document.getElementById('scanDesc').style.display = 'block';
+                 document.getElementById('scanResult').style.display = 'none';
+                 if(html5QrcodeScanner) {
+                    try { html5QrcodeScanner.clear(); html5QrcodeScanner = null; } catch(e){}
+                 }
+            }
+
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             const btns = document.querySelectorAll('.nav-btn');
@@ -856,18 +908,12 @@
             if(map[id] !== undefined) btns[map[id]].classList.add('active');
 
             if(id === 'scan-section') {
-                if(!document.getElementById('scanResult').style.display || document.getElementById('scanResult').style.display === 'none') {
-                    // Reset scanner if it was previously nullified
-                    if(!html5QrcodeScanner) {
-                        initScanner();
-                    }
-                }
-            } else {
-                if(html5QrcodeScanner) {
-                    try { 
-                        html5QrcodeScanner.clear(); 
-                        html5QrcodeScanner = null;
-                    } catch(e){}
+                // Only init scanner if we are not in "View Link" mode
+                if(document.getElementById('reader').style.display === 'none') {
+                    // Do nothing, we are viewing a link result
+                } else {
+                    document.getElementById('reader').style.display = 'block';
+                    initScanner();
                 }
             }
         }
