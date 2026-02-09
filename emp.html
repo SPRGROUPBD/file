@@ -94,7 +94,7 @@
     #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .scan-result-box { display: none; margin-top: 20px; animation: fadeIn 0.5s; padding-bottom: 50px; }
     
-    /* --- RESPONSIVE ID CARD STYLE --- */
+    /* --- UPDATED ID CARD STYLE (FULLY VISIBLE) --- */
     .id-card-container {
         display: flex;
         justify-content: center;
@@ -102,121 +102,184 @@
     }
     .id-card {
         width: 100%; 
-        max-width: 360px; 
+        max-width: 380px; /* Slightly wider to fit content */
         background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        overflow: hidden;
-        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        overflow: visible; /* Ensure no content is hidden */
         text-align: center;
         position: relative;
         margin: 0 auto; 
-        aspect-ratio: 1.586; /* Visual ratio kept, not strict print size */
+        height: auto; /* Auto height to fit all content */
+        min-height: 400px; /* Minimum height */
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #ddd;
     }
+    
+    /* Header */
     .id-header {
-        background: #2c3e50;
+        background: #000000; 
         color: white;
-        padding: 12px 10px;
+        padding: 12px 15px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        min-height: 50px;
+        border-bottom: 3px solid #27ae60;
     }
     .id-header img.company-logo {
-        height: 40px;
+        height: 35px;
         width: auto;
-        background: white;
-        padding: 2px;
-        border-radius: 4px;
-        object-fit: contain;
+        margin-right: 10px;
+        display: none;
     }
+    .id-header img.company-logo.show { display: block; }
     .id-header h4 {
         margin: 0;
         font-size: 14px;
-        font-weight: bold;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 1px;
-    }
-    .id-body { padding: 20px 15px; }
-    .profile-view-img {
-        width: 110px;
-        height: 110px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid #f4f6f9;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        margin-bottom: 15px;
-    }
-    .profile-name {
-        font-size: 18px;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 5px;
         line-height: 1.2;
     }
+    
+    /* Body */
+    .id-body { 
+        padding: 15px; 
+        flex-grow: 1; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #fff;
+    }
+    
+    /* Photo */
+    .profile-view-img {
+        width: 100px;
+        height: 100px; /* Reduced slightly from 110px */
+        object-fit: cover;
+        border: 3px solid #eef2f7;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    
+    /* Name */
+    .profile-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #000;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        line-height: 1.2;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Designation */
     .profile-deg {
-        color: #27ae60;
+        background: #27ae60;
+        color: white;
         font-weight: 600;
-        font-size: 13px;
-        margin-bottom: 20px;
-        background: #eafaf1;
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
+        font-size: 11px;
+        margin-bottom: 12px;
+        padding: 4px 15px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Info List */
+    .info-grid {
+        width: 100%;
+        font-size: 11px;
+        text-align: left;
+        margin-bottom: 5px;
     }
     .info-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 12px;
-        text-align: left;
-        border-bottom: 1px dashed #eee;
-        padding-bottom: 5px;
+        margin-bottom: 4px;
+        border-bottom: 1px dotted #e0e0e0;
+        padding-bottom: 2px;
     }
-    .info-label { color: #7f8c8d; font-weight: 500; }
-    .info-val { color: #2c3e50; font-weight: 700; text-align: right; }
+    .info-label { color: #7f8c8d; font-weight: 500; text-transform: uppercase; font-size: 9px; }
+    .info-val { color: #2c3e50; font-weight: 700; font-size: 11px; text-align: right; }
     
+    /* Footer */
     .id-footer {
         background: #f8f9fa;
         padding: 10px 15px;
         border-top: 1px solid #eee;
-        text-align: left;
+        flex-grow: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
     }
-    .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; font-size: 10px; color: #555; }
     
-    /* Layout for Signature and QR side by side */
     .footer-sign-qr {
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        margin-top: 5px;
-        padding-top: 5px;
-        border-top: 1px solid #e0e0e0;
+        align-items: center;
+        margin-bottom: 5px;
     }
     
     .signature-area {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
+        text-align: left;
         flex: 1;
     }
-    .sig-img { height: 30px; max-width: 100px; object-fit: contain; }
-    .sig-label { font-size: 8px; color: #999; margin-right: 5px; text-transform: uppercase; }
+    .sig-img { 
+        height: 25px; 
+        max-width: 100px; 
+        object-fit: contain; 
+        display: block;
+    }
+    .sig-label { 
+        font-size: 8px; 
+        color: #555; 
+        text-transform: uppercase; 
+        font-weight: bold;
+        margin-bottom: 2px;
+        display: block;
+    }
 
     .qr-area {
         text-align: center;
-        flex: 1;
+        flex: 0 0 auto;
     }
     .qr-area span {
         font-size: 8px;
-        color: #999;
+        color: #7f8c8d;
         display: block;
         margin-bottom: 2px;
         font-weight: bold;
     }
     #embeddedQR img {
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         border-radius: 4px;
+        display: block;
+    }
+    
+    /* Return Notice */
+    .return-notice {
+        font-size: 9px;
+        color: #c0392b;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 2px;
+        border-top: 1px dashed #ddd;
+        padding-top: 5px;
+        text-transform: uppercase;
+        line-height: 1.4;
+    }
+    .return-details {
+        font-size: 9px;
+        color: #555;
+        text-align: center;
+        margin-top: 2px;
+        line-height: 1.3;
     }
 
     /* Company Info Upload Section */
@@ -232,11 +295,11 @@
     @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
     @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-    /* --- PRINT STYLES (Removed CR80 Size Constraint) --- */
+    /* --- PRINT STYLES --- */
     @media print {
         @page {
             margin: 0;
-            /* Removed: size: 86mm 54mm; (Uses Default A4/Letter) */
+            size: auto; /* Auto size to fit content */
         }
         body {
             background: white;
@@ -247,41 +310,32 @@
             display: none !important;
         }
         .container {
-            padding: 20px;
+            padding: 0;
             width: 100%;
             max-width: none;
             margin: 0;
             background: white;
             display: flex;
             justify-content: center;
+            align-items: flex-start; /* Align top */
+            min-height: 100vh;
         }
         .id-card-container {
             padding: 0;
             width: 100%;
         }
         .id-card {
-            /* Removed strict dimensions. Allow it to be natural size but centered */
-            width: 100%;
-            max-width: 360px; /* Keeps it looking like a card */
-            margin: auto;
+            width: 380px; /* Fixed width for print */
+            height: auto; /* Auto height ensures full print */
+            margin: 20px auto;
             box-shadow: none;
-            border: 1px solid #ccc; /* Border for visibility on paper */
+            border: 1px solid #000;
             page-break-inside: avoid;
         }
-        /* Reset font sizes to normal readable size */
-        .id-header { padding: 12px 10px; }
-        .id-header img.company-logo { height: 40px; }
-        .id-header h4 { font-size: 14px; }
-        .id-body { padding: 20px 15px; }
-        .profile-view-img { width: 110px; height: 110px; border: 4px solid #eee; }
-        .profile-name { font-size: 18px; margin-bottom: 5px; }
-        .profile-deg { font-size: 13px; padding: 4px 12px; margin-bottom: 20px; }
-        .info-row { font-size: 12px; margin-bottom: 8px; padding-bottom: 5px; }
-        .id-footer { padding: 10px 15px; }
-        .footer-grid { font-size: 10px; }
-        .sig-label, .qr-area span { font-size: 8px; }
-        .sig-img { height: 30px; }
-        #embeddedQR img { width: 50px; height: 50px; } 
+        /* Force Colors */
+        .id-header { background: #000000 !important; color: white !important; -webkit-print-color-adjust: exact; }
+        .profile-deg { background: #27ae60 !important; color: white !important; -webkit-print-color-adjust: exact; }
+        .return-notice { color: #c0392b !important; -webkit-print-color-adjust: exact; }
     }
 
     /* Mobile specific tweaks */
@@ -547,8 +601,8 @@
         let companySettings = {
             logo: 'https://picsum.photos/seed/logo/100/50', 
             signature: 'https://picsum.photos/seed/sig/100/40',
-            address: 'Monico Pharma Ltd Head Office',
-            tel: '+880 1700000000'
+            address: '7,Gausnagar, New Eskaton, Ramna, Dhaka - 1205',
+            tel: '+8802 - 222227976'
         };
 
         // --- URL PARAMETER CHECK ---
@@ -571,7 +625,7 @@
             mpoRef.child(id).once('value', (snapshot) => {
                 const data = snapshot.val();
                 if(data) {
-                    data.id = id; // Add ID for QR generation
+                    data.id = id; 
                     showIdCard(data);
                 } else {
                     document.getElementById('scanResult').innerHTML = '<h3 style="color:red">Employee Not Found</h3><button class="btn btn-green" onclick="window.location.href=window.location.pathname">Go Home</button>';
@@ -767,7 +821,7 @@
             }
         }
 
-        // --- ID CARD DISPLAY (WITH EMBEDDED QR URL) ---
+        // --- ID CARD DISPLAY (UPDATED DESIGN - FULLY VISIBLE) ---
         function showIdCard(data) {
             const container = document.getElementById('scanResult');
             const statusColor = data.status === 'Active' ? '#27ae60' : '#e74c3c';
@@ -785,9 +839,8 @@
                 <div class="id-card-container">
                     <div class="id-card">
                         <div class="id-header">
-                            ${compLogo ? `<img src="${compLogo}" class="company-logo" alt="Logo">` : ''}
-                            <h4>Monico Pharma Ltd</h4>
-                            <div style="width: 40px;"></div>
+                            ${compLogo ? `<img src="${compLogo}" class="company-logo show" alt="Logo">` : ''}
+                            <h4>MONICO PHARMA LIMITED</h4>
                         </div>
                         
                         <div class="id-body">
@@ -795,43 +848,39 @@
                             <div class="profile-name">${data.name}</div>
                             <div class="profile-deg">${data.deg}</div>
                             
-                            <div class="info-row">
-                                <span class="info-label">Code:</span>
-                                <span class="info-val">${data.code}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Territory:</span>
-                                <span class="info-val">${data.territory}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Mobile:</span>
-                                <span class="info-val">${data.mobile}</span>
-                            </div>
-                             <div class="info-row">
-                                <span class="info-label">Joining:</span>
-                                <span class="info-val">${data.date || 'N/A'}</span>
-                            </div>
-                            <div class="info-row" style="border:none; margin-top:15px; justify-content:center;">
-                                <span style="font-size:11px; padding:4px 12px; border-radius:12px; background:${statusColor}; color:white;">${data.status}</span>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <span class="info-label">ID No:</span>
+                                    <span class="info-val">${data.code}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Mobile:</span>
+                                    <span class="info-val">${data.mobile}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Joining:</span>
+                                    <span class="info-val">${data.date || 'N/A'}</span>
+                                </div>
                             </div>
                         </div>
 
                         <div class="id-footer">
-                            <div class="footer-grid">
-                                <div><strong>Address:</strong> ${compAddr}</div>
-                                <div><strong>Tel:</strong> ${compTel}</div>
-                            </div>
-                            
-                            <!-- Footer Layout: Signature and QR Side by Side -->
                             <div class="footer-sign-qr">
                                 <div class="signature-area">
                                     <span class="sig-label">Authorized Signature</span>
-                                    ${compSig ? `<img src="${compSig}" class="sig-img">` : '<span style="font-style:italic; font-size:12px; color:#ccc;">[Sign Here]</span>'}
+                                    ${compSig ? `<img src="${compSig}" class="sig-img">` : '<div style="height:25px; border-bottom:1px solid #aaa; width:80px;"></div>'}
                                 </div>
                                 <div class="qr-area">
                                     <span>SCAN ME</span>
                                     <div id="embeddedQR"></div>
                                 </div>
+                            </div>
+                            
+                            <div class="return-notice">
+                                If this card is found, Please return to
+                            </div>
+                            <div class="return-details">
+                                ${compAddr} | ${compTel}
                             </div>
                         </div>
                     </div>
