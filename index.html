@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample Managment System - Sample/Gift/PPM Info</title>
+    <title>Sample Management System</title>
     
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -149,6 +149,18 @@
         .search-container { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
         .search-input { flex: 1; padding: 12px 15px; border: 1px solid var(--border); border-radius: 30px; font-size: 1rem; outline: none; transition: 0.3s; }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 5px rgba(52, 152, 219, 0.2); }
+
+        /* NEW: Small Search Input for Management Headers */
+        .search-input-sm {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 200px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .search-input-sm:focus { border-color: var(--accent); }
 
         /* CATEGORY VIEW */
         .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
@@ -822,6 +834,9 @@
                 <h3>MPO List</h3>
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     
+                    <!-- MPO SEARCH INPUT -->
+                    <input type="text" id="search-mpo" class="search-input-sm" placeholder="Search Name or ID..." oninput="window.renderMgmtTables()">
+
                     <div style="display:flex; align-items:center; gap:5px; border-right: 1px solid #ddd; padding-right: 10px; margin-right: 5px;">
                         <label style="margin:0; font-size:0.85rem; color:#7f8c8d;">Area:</label>
                         <select id="filter-mpo-area" style="width: 150px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;" onchange="window.renderMgmtTables()">
@@ -839,6 +854,10 @@
             <div class="panel-header">
                 <h3>Product List</h3>
                 <div style="display:flex; gap:10px;">
+                    
+                    <!-- PRODUCT SEARCH INPUT -->
+                    <input type="text" id="search-prod" class="search-input-sm" placeholder="Search Name or ID..." oninput="window.renderMgmtTables()">
+
                     <button class="btn btn-secondary" onclick="window.openUploadModal('prod')"><i class="fa-solid fa-file-excel" style="color:green;"></i> Upload Excel</button>
                     <button class="btn btn-primary" onclick="window.openModal('prod')"><i class="fa-solid fa-plus"></i> Add Product</button>
                 </div>
@@ -849,6 +868,10 @@
             <div class="panel-header">
                 <h3>Gift List</h3>
                 <div style="display:flex; gap:10px;">
+                    
+                    <!-- GIFT SEARCH INPUT -->
+                    <input type="text" id="search-gift" class="search-input-sm" placeholder="Search Name or ID..." oninput="window.renderMgmtTables()">
+
                     <button class="btn btn-secondary" onclick="window.openUploadModal('gift')"><i class="fa-solid fa-file-excel" style="color:green;"></i> Upload Excel</button>
                     <button class="btn btn-purple" onclick="window.openModal('gift')"><i class="fa-solid fa-plus"></i> Add Gift</button>
                 </div>
@@ -1122,7 +1145,7 @@
     let editType = null; 
     let editId = null;
 
-    // --- AUTHENTICATION & LOGIN ---
+    // --- AUTHENTICATION & LOGIN (UPDATED & FIXED) ---
     function handleLogin(e) {
         e.preventDefault();
         const u = e.target.username.value.trim();
@@ -1130,37 +1153,60 @@
         const errDiv = document.getElementById('login-error');
         errDiv.style.display = 'none';
 
-        // PRIORITY 1: ADMIN HARDCODED LOGIN
+        // 1. Basic Validation
+        if (!u || !p) {
+            showLoginError("Please enter Username and Password.");
+            return;
+        }
+
+        // 2. HARDCODED ADMIN LOGIN
         if (u.toUpperCase() === 'KS' && p === 'Monico@Ku007') {
             currentUser = { username: 'KS', role: 'admin', depotId: null };
             completeLogin();
             return;
         }
 
-        // PRIORITY 2: USER LOGIN FROM FIREBASE DB (FIXED: using 'get' instead of 'fetch')
+        // 3. USER LOGIN FROM FIREBASE DB
         document.getElementById('loader').style.display = 'block'; // Show loading
 
         get(ref(db, 'users')).then((snapshot) => {
             document.getElementById('loader').style.display = 'none'; // Hide loading
-            if (snapshot.exists()) {
-                const users = snapshot.val();
-                // users is an object, convert to array to find
-                const userList = Object.values(users);
-                const foundUser = userList.find(user => user.username.toLowerCase() === u.toLowerCase() && user.password === p);
-                
-                if (foundUser) {
-                    currentUser = { username: foundUser.username, role: 'user', depotId: foundUser.depotId };
-                    completeLogin();
-                } else {
-                    showLoginError("Invalid Username or Password");
-                }
+            
+            if (!snapshot.exists()) {
+                showLoginError("No users found in Database. Please contact Admin to add you.");
+                return;
+            }
+
+            const users = snapshot.val();
+            const userList = Object.values(users);
+            
+            // Find user matching username and password
+            const foundUser = userList.find(user => 
+                user.username.toLowerCase() === u.toLowerCase() && user.password === p
+            );
+            
+            if (foundUser) {
+                currentUser = { 
+                    username: foundUser.username, 
+                    role: 'user', 
+                    depotId: foundUser.depotId 
+                };
+                completeLogin();
             } else {
-                showLoginError("No users found in database");
+                showLoginError("Invalid Username or Password.");
             }
         }).catch((error) => {
             console.error("Login Error:", error);
             document.getElementById('loader').style.display = 'none';
-            showLoginError("Connection Failed. Check Internet or contact Admin.");
+            
+            // Detailed error message for debugging
+            let errorMsg = "Connection Failed. ";
+            if(error.code === 'PERMISSION_DENIED') {
+                errorMsg += "Database Access Denied. Check Firebase Rules.";
+            } else {
+                errorMsg += error.message;
+            }
+            showLoginError(errorMsg);
         });
     }
 
@@ -2097,14 +2143,13 @@
     window.clearChallanFilters = function() {
         document.getElementById('filter-date').value = "";
         document.getElementById('filter-depot').value = "";
-        document.getElementById('filter-type').value = ""; // NEW RESET
+        document.getElementById('filter-type').value = ""; 
         document.getElementById('filter-category').value = "";
         document.getElementById('filter-mpo').value = "";
         document.getElementById('filter-challan-no').value = "";
         window.renderChallans();
     }
 
-    // --- NEW: VIEW CHALLAN DETAILS ---
     window.viewChallanDetails = function(key) {
         const c = data.challans.find(x => x.key === key);
         if(!c) return;
@@ -2132,7 +2177,6 @@
             `;
         });
 
-        // Setup print button inside modal
         const printBtn = document.getElementById('vc-print-btn');
         printBtn.onclick = function() {
             document.getElementById('view-challan-modal').style.display = 'none';
@@ -2214,7 +2258,6 @@
         const viewMode = document.getElementById('view-mode').value;
         const dateFilter = document.getElementById('filter-date').value;
         
-        // NEW: Get Type Filter
         const typeFilter = document.getElementById('filter-type').value;
 
         const list = fChallans.filter(c => {
@@ -2230,13 +2273,11 @@
                 if (cDateStr !== dateFilter) matchesDate = false;
             }
 
-            // NEW: Type Filtering Logic
             let matchesType = true;
             if (typeFilter) {
                 if (typeFilter === 'Manual') {
                     matchesType = c.isManual === true;
                 } else {
-                    // For Product or Gift, ensure it is NOT manual AND matches type
                     matchesType = !c.isManual && c.type === typeFilter;
                 }
             }
@@ -2504,6 +2545,18 @@
             filteredMpos = fMpos.filter(m => m.area === areaSelect.value);
         }
 
+        // MPO SEARCH LOGIC
+        const mpoSearchInput = document.getElementById('search-mpo');
+        if (mpoSearchInput) {
+            const searchVal = mpoSearchInput.value.toLowerCase();
+            if (searchVal) {
+                filteredMpos = filteredMpos.filter(m => 
+                    (m.name && m.name.toLowerCase().includes(searchVal)) || 
+                    (m.id && m.id.toLowerCase().includes(searchVal))
+                );
+            }
+        }
+
         filteredMpos.sort((a, b) => {
             const areaA = (a.area || '').toLowerCase();
             const areaB = (b.area || '').toLowerCase();
@@ -2572,9 +2625,22 @@
             return 0;
         });
 
+        // PRODUCT SEARCH LOGIC
+        const prodSearchInput = document.getElementById('search-prod');
+        let filteredProds = fProds;
+        if (prodSearchInput) {
+            const searchVal = prodSearchInput.value.toLowerCase();
+            if (searchVal) {
+                filteredProds = filteredProds.filter(p => 
+                    (p.name && p.name.toLowerCase().includes(searchVal)) || 
+                    (p.id && p.id.toLowerCase().includes(searchVal))
+                );
+            }
+        }
+
         const prodT = document.getElementById('table-prod');
         prodT.innerHTML = `<thead><tr><th>ID</th><th>Name</th><th>Pack</th><th>Status</th><th>A/B/C/D/E</th><th>Stock</th><th>Depot</th><th>Actions</th></tr></thead>`;
-        fProds.forEach(p => {
+        filteredProds.forEach(p => {
             const statusBadge = (p.isActive === false || p.isActive === 'false') 
                 ? '<span style="color:red; font-weight:bold;">Inactive</span>' 
                 : '<span style="color:var(--success); font-weight:bold;">Active</span>';
@@ -2600,9 +2666,22 @@
                 </tr>`;
         });
 
+        // GIFT SEARCH LOGIC
+        const giftSearchInput = document.getElementById('search-gift');
+        let filteredGifts = fGifts;
+        if (giftSearchInput) {
+            const searchVal = giftSearchInput.value.toLowerCase();
+            if (searchVal) {
+                filteredGifts = filteredGifts.filter(p => 
+                    (p.name && p.name.toLowerCase().includes(searchVal)) || 
+                    (p.id && p.id.toLowerCase().includes(searchVal))
+                );
+            }
+        }
+
         const giftT = document.getElementById('table-gift');
         giftT.innerHTML = `<thead><tr><th>ID</th><th>Name</th><th>Pack</th><th>Status</th><th>A/B/C/D/E</th><th>Depot</th><th>Actions</th></tr></thead>`;
-        fGifts.forEach(p => {
+        filteredGifts.forEach(p => {
             const statusBadge = (p.isActive === false || p.isActive === 'false') 
                 ? '<span style="color:red; font-weight:bold;">Inactive</span>' 
                 : '<span style="color:var(--success); font-weight:bold;">Active</span>';
