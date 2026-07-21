@@ -156,9 +156,23 @@
             .holiday-row td { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             .header-print { text-align: center; margin-bottom: 10px; }
-            .info-table-print { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #000; }
-            .info-table-print td { border: 1px solid #000; padding: 3px; text-align: left; }
-            .info-label-print { font-weight: bold; display: inline-block; width: 100px; }
+            
+            /* INFO TABLE PRINT - NO WRAP */
+            .info-table-print { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #000; table-layout: auto; }
+            .info-table-print td { 
+                border: 1px solid #000; 
+                padding: 3px 5px; 
+                text-align: left; 
+                white-space: nowrap; 
+                word-break: keep-all;
+                overflow: hidden;
+            }
+            .info-label-print { 
+                font-weight: bold; 
+                display: inline-block; 
+                width: 140px; 
+                white-space: nowrap;
+            }
             
             /* Print Signature Layout */
             .signature-area-print { display: flex; justify-content: space-between; margin-top: 60px; width: 100%; }
@@ -433,6 +447,8 @@
         let isOnline = navigator.onLine;
         let currentApproveKeyId = null;
         let tempMySignatureData = null;
+        let editingPlanOriginalStatus = null;
+        let editingPlanOriginalApprovalFlow = null;
         
         let currentEditSignatures = { prepared: "", prepared_signature: "", am: "", am_signature: "", rsm: "", rsm_signature: "", approved: "" };
 
@@ -819,6 +835,10 @@
                     approved: "" 
                 };
                 
+                // Reset tracking variables for new plan
+                editingPlanOriginalStatus = null;
+                editingPlanOriginalApprovalFlow = null;
+                
                 const sigImg = document.getElementById('sig_prepared_img');
                 const sigText = document.getElementById('sig_prepared');
                 if (currentUser.signature) {
@@ -843,11 +863,10 @@
                 let regionVal = currentUser.region || '';
 
                 if(currentUser.role === 'user' || currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
-                    territoryVal = '-'; // AM, RSM, Sr.RSM er Territory -
+                    territoryVal = '-'; 
                 }
                 if(currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
-                    areaVal = '-'; // RSM, Sr.RSM er Area -
-                    // Region will be filled from user data
+                    areaVal = '-'; 
                 }
                 
                 document.getElementById('tp_territory').value = territoryVal;
@@ -860,7 +879,7 @@
                     document.getElementById('tp_rsm').value='';
                 }
                 else if(currentUser.role==='user'){
-                    document.getElementById('tp_areaManager').value=''; // FAKA THAKBE
+                    document.getElementById('tp_areaManager').value=''; 
                     document.getElementById('tp_rsm').value=currentUser.rsmName||'';
                 }
                 else{
@@ -966,8 +985,8 @@
             const pendingListDiv = document.getElementById('dashboardPendingList');
             const pendingCard = document.getElementById('pendingCard');
             
-            // Hide pending list for Sales Admin as they don't approve
-            if(currentUser.role === 'sales_admin') {
+            // Hide pending list for Sales Admin and Superadmin (as they don't approve)
+            if(currentUser.role === 'sales_admin' || currentUser.role === 'superadmin') {
                 pendingCard.style.display = 'none';
             } else {
                 pendingCard.style.display = 'block';
@@ -996,13 +1015,12 @@
                                 if(p.info.status.includes('Pending'))pe++;
                                 if(p.info.status==='Rejected')re++;
                                 if(p.info.status==='Approved')ap++;
-                                if(p.info.status.includes('Pending') && p.info.status !== 'Pending_RSM' ? (currentUser.role==='user') : (isRSMRole)) {
-                                    let isPendingForMe = false;
-                                    if(currentUser.role==='user' && p.info.status==='Pending_AM') isPendingForMe = true;
-                                    if(isRSMRole && p.info.status==='Pending_RSM') isPendingForMe = true;
-                                    if(currentUser.role==='superadmin' && p.info.status==='Pending_AM') isPendingForMe = true;
-                                    if(isPendingForMe) records.push({key:c.key, data:p});
-                                }
+                                
+                                let isPendingForMe = false;
+                                if(currentUser.role==='user' && p.info.status==='Pending_AM') isPendingForMe = true;
+                                if(isRSMRole && p.info.status==='Pending_RSM') isPendingForMe = true;
+                                
+                                if(isPendingForMe) records.push({key:c.key, data:p});
                             }
                         });
                     }
@@ -1023,7 +1041,6 @@
                             let isPendingForMe = false;
                             if(currentUser.role==='user' && p.payload.info.status==='Pending_AM') isPendingForMe = true;
                             if(isRSMRole && p.payload.info.status==='Pending_RSM') isPendingForMe = true;
-                            if(currentUser.role==='superadmin' && p.payload.info.status==='Pending_AM') isPendingForMe = true;
                             if(isPendingForMe) records.push({key:p.id, data:p.payload});
                         }
                     }
@@ -1035,7 +1052,7 @@
             document.getElementById('stat-approved').innerText=ap;
             updateUnsyncedCount();
 
-            if(currentUser.role !== 'sales_admin') {
+            if(currentUser.role !== 'sales_admin' && currentUser.role !== 'superadmin') {
                 if(records.length===0){
                     pendingListDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No pending approvals for you.</div>';
                 } else {
@@ -1073,8 +1090,18 @@
             let st="Pending",af={};
             if(currentUser.role==='mpo'){st="Pending_AM";af={amId:currentUser.amId,rsmId:currentUser.rsmId};}
             else if(currentUser.role==='user'){st="Pending_RSM";af={amId:currentUser.username,rsmId:currentUser.rsmId};}
-            else if(currentUser.role==='admin' || currentUser.role==='sr_rsm'){st="Approved"; currentEditSignatures.rsm = currentUser.name; currentEditSignatures.rsm_signature = currentUser.signature || "";}
-            else if(currentUser.role==='superadmin'){st="Approved"; currentEditSignatures.rsm = currentUser.name; currentEditSignatures.rsm_signature = currentUser.signature || "";}
+            else if(currentUser.role==='admin' || currentUser.role==='sr_rsm'){
+                st="Approved"; 
+                currentEditSignatures.rsm = currentUser.name; 
+                currentEditSignatures.rsm_signature = currentUser.signature || ""; 
+                // Approved box will remain empty
+            }
+            else if(currentUser.role==='superadmin'){
+                // Superadmin editing logic: keep original status and approval flow, don't attach own name
+                st = editingPlanOriginalStatus || "Approved"; // Fallback to Approved if somehow creating new
+                af = editingPlanOriginalApprovalFlow || {};
+                // currentEditSignatures will already be loaded from editTourPlan if editing
+            }
             
             const recordId = `${empId}_${month.replace(/\s/g,'_')}`;
             const payload = {
@@ -1117,7 +1144,7 @@
             for(let key in fbRecords) {
                 const d = fbRecords[key]; const isMonth = d.info.month === selectedMonth; let canView = false;
                 if(d.info.empId===currentUser.empId||d.info.empId===currentUser.username)canView=true;
-                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')canView=true; // Sales Admin can view all history
+                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')canView=true; 
                 if(isRSMRole && d.info.approvalFlow?.rsmId===currentUser.username)canView=true;
                 if(currentUser.role==='user'&&d.info.approvalFlow?.amId===currentUser.username)canView=true;
                 if(canView && isMonth) records.push({key, data: d});
@@ -1142,26 +1169,36 @@
             const isRSMRole = currentUser.role==='admin' || currentUser.role==='sr_rsm';
             const isSalesAdmin = currentUser.role === 'sales_admin';
             
-            // Approve/Reject buttons only for relevant roles and statuses
-            if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin'&&(isPAM||isPRSM)))btns+=`<button class="btn btn-sm btn-success" onclick="approvePlan('${key}')"><i class="fas fa-check"></i> Approve</button>`;
-            if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin')&&!isApp&&!isRej)btns+=`<button class="btn btn-sm btn-danger" onclick="rejectPlan('${key}')"><i class="fas fa-times"></i> Reject</button>`;
+            // Approve/Reject buttons ONLY for AM and RSM (not Superadmin)
+            if(currentUser.role==='user'&&isPAM) {
+                btns+=`<button class="btn btn-sm btn-success" onclick="approvePlan('${key}')"><i class="fas fa-check"></i> Approve</button>`;
+                btns+=`<button class="btn btn-sm btn-danger" onclick="rejectPlan('${key}')"><i class="fas fa-times"></i> Reject</button>`;
+            }
+            if(isRSMRole&&isPRSM) {
+                btns+=`<button class="btn btn-sm btn-success" onclick="approvePlan('${key}')"><i class="fas fa-check"></i> Approve</button>`;
+                btns+=`<button class="btn btn-sm btn-danger" onclick="rejectPlan('${key}')"><i class="fas fa-times"></i> Reject</button>`;
+            }
             
             // Print button available for RSM, Sr.RSM, Superadmin, and Sales Admin
             if(isRSMRole||currentUser.role==='superadmin'||isSalesAdmin)btns+=`<button class="btn btn-sm btn-primary" onclick="printHistoryRecord('${key}')"><i class="fas fa-print"></i></button>`;
             
-            // Edit button: Sales Admin cannot edit
+            // Edit button: Sales Admin cannot edit. Superadmin can always edit.
             let canEdit=false;
             if(!isSalesAdmin){
                 if(isOwner&&!isApp)canEdit=true;
                 if(currentUser.role==='user'&&isPAM)canEdit=true;
                 if(isRSMRole&&isPRSM)canEdit=true;
-                if(currentUser.role==='superadmin'&&!isApp)canEdit=true;
+                if(currentUser.role==='superadmin')canEdit=true; // Superadmin can edit ANYTHING
                 if(isRej&&isOwner)canEdit=true;
             }
             if(canEdit)btns+=`<button class="btn btn-sm btn-warning" onclick="editTourPlan('${key}')"><i class="fas fa-edit"></i> Edit</button>`;
             
-            // Delete button: Sales Admin cannot delete
-            if((isOwner||currentUser.role==='superadmin')&&!isApp&&!isSalesAdmin)btns+=`<button class="btn btn-sm btn-danger" onclick="deleteTourPlan('${key}')"><i class="fas fa-trash"></i></button>`;
+            // Delete button: Sales Admin cannot delete. Superadmin can delete anything.
+            if(!isSalesAdmin) {
+                if((isOwner && !isApp) || currentUser.role === 'superadmin') {
+                    btns+=`<button class="btn btn-sm btn-danger" onclick="deleteTourPlan('${key}')"><i class="fas fa-trash"></i></button>`;
+                }
+            }
             
             return `<div class="hist-row"><div style="min-width:180px;"><strong style="font-size:13px;">${d.info.name}</strong> <span style="color:#888;font-size:11px;">(${d.info.empId})</span><br>${statusBadge} <span style="color:#aaa;font-size:10px;">| ${d.info.designation||''}</span></div><div class="hist-actions">${btns}</div></div>`;
         }
@@ -1245,6 +1282,12 @@
         };
 
         window.confirmApprovePlan = function() {
+            // Superadmin should not be able to trigger this, but double check
+            if(currentUser.role === 'superadmin') {
+                alert("System Admin cannot approve or reject plans.");
+                return;
+            }
+            
             if (!currentUser.signature) {
                 alert("Please upload your signature in the 'My Signature' tab before approving.");
                 return;
@@ -1267,15 +1310,17 @@
                 const oldSigs = d.info.signatures || {};
                 
                 if(currentUser.role === 'user') {
+                    // AM approves -> goes to RSM
                     upd['info/status'] = 'Pending_RSM';
                     upd['info/signatures'] = { ...oldSigs, am: currentUser.name, am_signature: currentUser.signature };
-                } else {
+                } else if (currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
+                    // RSM approves -> Final Approved
                     upd['info/status'] = 'Approved';
                     upd['info/signatures'] = { 
                         ...oldSigs, 
                         rsm: currentUser.name, 
                         rsm_signature: currentUser.signature,
-                        approved: currentUser.name
+                        approved: "" // Approved box will remain empty
                     };
                 }
                 
@@ -1309,6 +1354,10 @@
         };
 
         window.rejectPlan=function(key){
+            if(currentUser.role === 'superadmin') {
+                alert("System Admin cannot reject plans.");
+                return;
+            }
             if(confirm("Reject this plan?")){
                 getPlanData(key).then(d=>{if(!d) return;const upd = {'info/status':'Rejected'};const mergedData = { ...d, info: { ...d.info, ...upd['info'] } };idbPut('tourPlans', { id: key, payload: mergedData });
                 if(isOnline) { update(ref(db,'tourPlans/'+key),upd).then(()=>{alert("Rejected!");loadDashboardStats();loadTourHistory();}); }
@@ -1404,6 +1453,10 @@
                 rsm_signature: d.info.signatures?.rsm_signature || "",
                 approved: d.info.signatures?.approved || ""
             };
+            
+            // Keep track of original status and approval flow so System Admin doesn't override them
+            editingPlanOriginalStatus = d.info.status;
+            editingPlanOriginalApprovalFlow = d.info.approvalFlow || {};
             
             if(window.innerWidth<=768) {
                 document.getElementById('sidebar').classList.remove('active');
@@ -1559,7 +1612,6 @@
                 fg_am.style.display = 'none';
                 designation = 'Senior Regional Sales Manager';
             } else if (r === 'sales_admin') {
-                // Sales Admin needs no assignment
                 fg_rsm.style.display = 'none';
                 fg_am.style.display = 'none';
                 designation = 'Sales Admin';
@@ -1657,7 +1709,7 @@
                 rsmName: rsmName,
                 amId: amId,
                 areaManagerName: areaManagerName,
-                signature: existingSig, // preserve signature if editing own profile
+                signature: existingSig, 
                 mustChangePassword: document.getElementById('m_forceChange').value === 'true'
             };
             
