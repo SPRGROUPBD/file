@@ -52,6 +52,9 @@
             .menu-toggle { display: block; }
             .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
             .overlay.active { display: block; }
+            .info-grid { grid-template-columns: 1fr !important; }
+            .info-cell:nth-child(odd) { border-right: 1px solid #000 !important; }
+            .info-cell:nth-child(even) { border-right: none !important; }
         }
 
         .brand { padding: 18px 15px; background: var(--secondary); text-align: center; }
@@ -79,30 +82,30 @@
         .widget-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
         .bg-primary { background: var(--primary); } .bg-success { background: var(--success); } .bg-warning { background: var(--warning); } .bg-danger { background: var(--danger); }
 
-        /* ===== TABLES ===== */
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
-        table.data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        table.data-table th, table.data-table td { padding: 4px 3px; border: 1px solid #000; text-align: center; font-size: 11px; }
-        table.data-table th { background: #f0f0f0; font-weight: bold; white-space: nowrap; }
+        /* ===== TABLE ===== */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 4px 3px; border: 1px solid #000; text-align: center; font-size: 11px; }
+        th { background: #f0f0f0; font-weight: bold; white-space: nowrap; }
         
-        table.data-table select { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; cursor: pointer;}
-        table.data-table select:focus { background: #eef5ff; }
-        table.data-table select:disabled { color: #999; cursor: not-allowed; }
-        table.data-table input[type="text"] { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; }
-        table.data-table input[type="text"]:focus { background: #eef5ff; }
-        table.data-table input[type="text"]:disabled { color: #999; cursor: not-allowed; }
-
-        /* Info Table (New Design) */
-        .info-table-custom { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .info-table-custom td { border: 1px solid #000; padding: 8px; font-size: 14px; }
-        .info-table-custom td.label { font-weight: bold; width: 20%; background: #f5f5f5; }
-        .info-table-custom td.value { width: 30%; }
-        .info-table-custom td.value input { border: none; background: transparent; width: 100%; font-size: 14px; padding: 0; outline: none; font-weight: bold; color: #333; }
-        .info-table-custom td.value select { border: none; background: transparent; width: 100%; font-size: 14px; padding: 0; outline: none; font-weight: bold; color: #333; }
+        table select { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; cursor: pointer;}
+        table select:focus { background: #eef5ff; }
+        table select:disabled { color: #999; cursor: not-allowed; }
+        table input[type="text"] { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; }
+        table input[type="text"]:focus { background: #eef5ff; }
+        table input[type="text"]:disabled { color: #999; cursor: not-allowed; }
 
         /* Holiday Row Background Color */
         .holiday-row { background-color: #e9ecef !important; }
         .holiday-row input, .holiday-row select { background-color: #e9ecef !important; }
+
+        /* ===== INFO GRID ===== */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #000; margin-bottom: 10px; }
+        .info-cell { display: flex; border-bottom: 1px solid #000; min-height: 30px; }
+        .info-cell:nth-child(odd) { border-right: 1px solid #000; }
+        .info-label { padding: 4px 6px; font-weight: bold; font-size: 10px; background: #f8f9fa; width: 120px; border-right: 1px solid #000; display: flex; align-items: center; flex-shrink: 0; }
+        .info-value { flex: 1; padding: 2px; display: flex; align-items: center; }
+        .info-value input { border: 1px solid #000; width: 100%; font-size: 10px; padding: 4px; background: transparent; border-radius: 2px; text-align: left; }
 
         .address-text { text-align: center; font-size: 11px; color: #555; margin-bottom: 5px; }
         .day-name { font-weight: bold; background: #f9f9f9; }
@@ -120,6 +123,8 @@
         .sig-box { width: 24%; text-align: center; font-size: 10px; position: relative; }
         @media (max-width: 600px) { .sig-box { width: 48%; } }
         .sig-name { font-weight: bold; min-height: 18px; border-bottom: 1px solid #000; margin-bottom: 2px; padding-bottom: 2px; }
+        .sig-preview-img { max-height: 40px; max-width: 100%; margin-bottom: 5px; }
+        .upload-sig-btn { font-size: 9px; color: blue; cursor: pointer; text-decoration: underline; }
 
         /* ===== BADGES ===== */
         .badge { padding: 3px 7px; border-radius: 4px; font-size: 9px; font-weight: bold; white-space: nowrap; }
@@ -141,16 +146,19 @@
             body { margin: 0; padding: 0; background-color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #dashboardScreen, .sidebar, .top-bar, .no-print, .widget-grid, .login-container, .modal-bg { display: none !important; }
             #history-print-container { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            body { font-family: Arial, sans-serif; font-size: 12px; }
-            table { width: 100%; border-collapse: collapse; }
-            table, th, td { border: 1px solid #000; }
+            body { font-family: sans-serif; font-size: 10px; }
+            table { width: 100%; border-collapse: collapse; min-width: unset; }
+            th, td { border: 1px solid #000; padding: 2px; text-align: center; }
             th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            td.label { background-color: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             
+            /* Print Holiday Row Color */
             .holiday-row { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .holiday-row td { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             .header-print { text-align: center; margin-bottom: 10px; }
+            .info-table-print { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #000; }
+            .info-table-print td { border: 1px solid #000; padding: 3px; text-align: left; }
+            .info-label-print { font-weight: bold; display: inline-block; width: 100px; }
             
             /* Print Signature Layout */
             .signature-area-print { display: flex; justify-content: space-between; margin-top: 60px; width: 100%; }
@@ -216,6 +224,7 @@
                         <p style="color:#666;font-size:13px;">Welcome, <strong id="welcomeName"></strong>!</p>
                     </div>
 
+                    <!-- Pending Approval List on Dashboard -->
                     <div class="card" id="pendingCard">
                         <div class="card-header">Approval Pending List</div>
                         <div id="dashboardPendingList">
@@ -230,37 +239,20 @@
                         <div class="card-header">MONICO PHARMA LTD</div>
                         <div class="address-text">7, Gausnagar, New Eskaton, Ramna, Dhaka 1205, Bangladesh</div>
                         <h3 style="text-align:center;margin:0 0 10px;font-size:15px;font-weight:bold;">MONTHLY TOUR PLAN</h3>
-                        
-                        <table class="info-table-custom">
-                            <tr>
-                                <td class="label">Emp. ID</td>
-                                <td class="value"><input type="text" id="tp_empId" readonly></td>
-                                <td class="label">Month</td>
-                                <td class="value"><select id="tp_month" onchange="handleMonthChange()"></select></td>
-                            </tr>
-                            <tr>
-                                <td class="label">Name of Emp.</td>
-                                <td class="value"><input type="text" id="tp_name" readonly></td>
-                                <td class="label">Name of Area Manager</td>
-                                <td class="value"><input type="text" id="tp_areaManager" readonly></td>
-                            </tr>
-                            <tr>
-                                <td class="label">Territory</td>
-                                <td class="value"><input type="text" id="tp_territory" readonly></td>
-                                <td class="label">Name of RSM/Sr.RSM</td>
-                                <td class="value"><input type="text" id="tp_rsm" readonly></td>
-                            </tr>
-                            <tr>
-                                <td class="label">Area</td>
-                                <td class="value"><input type="text" id="tp_area" readonly></td>
-                                <td class="label">Region</td>
-                                <td class="value"><input type="text" id="tp_region" readonly></td>
-                            </tr>
-                        </table>
-
+                        <div class="info-grid">
+                            <div class="info-cell"><div class="info-label">Emp. ID :</div><div class="info-value"><input type="text" id="tp_empId" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Month :</div><div class="info-value"><select id="tp_month" onchange="handleMonthChange()" style="border:1px solid #000;width:100%;font-size:10px;border-radius:2px;"></select></div></div>
+                            <div class="info-cell"><div class="info-label">Name of Emp :</div><div class="info-value"><input type="text" id="tp_name" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Designation :</div><div class="info-value"><input type="text" id="tp_designation" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Territory :</div><div class="info-value"><input type="text" id="tp_territory" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Area Manager :</div><div class="info-value"><input type="text" id="tp_areaManager" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Area :</div><div class="info-value"><input type="text" id="tp_area" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">RSM/Sr.RSM :</div><div class="info-value"><input type="text" id="tp_rsm" readonly></div></div>
+                            <div class="info-cell"><div class="info-label">Region :</div><div class="info-value"><input type="text" id="tp_region" readonly></div></div>
+                        </div>
                         <form id="tourPlanForm">
                             <div class="table-container">
-                                <table class="data-table">
+                                <table>
                                     <thead><tr>
                                         <th style="width:5%">Date</th>
                                         <th style="width:10%">Day</th>
@@ -349,7 +341,7 @@
                             </form>
                         </div>
                         <div class="table-container">
-                            <table class="data-table"><thead><tr><th>Emp.ID</th><th>Name</th><th>Role</th><th>Parent</th><th>User ID</th><th>Actions</th></tr></thead><tbody id="userTableBody"></tbody></table>
+                            <table><thead><tr><th>Emp.ID</th><th>Name</th><th>Role</th><th>Parent</th><th>User ID</th><th>Actions</th></tr></thead><tbody id="userTableBody"></tbody></table>
                         </div>
                     </div>
                 </div>
@@ -368,7 +360,7 @@
             </div>
 
             <div class="table-container" style="margin-bottom:15px;">
-                <table class="data-table">
+                <table>
                     <thead><tr>
                         <th style="width:5%">Date</th>
                         <th style="width:10%">Day</th>
@@ -855,6 +847,7 @@
                 }
                 if(currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
                     areaVal = '-'; // RSM, Sr.RSM er Area -
+                    // Region will be filled from user data
                 }
                 
                 document.getElementById('tp_territory').value = territoryVal;
@@ -867,7 +860,7 @@
                     document.getElementById('tp_rsm').value='';
                 }
                 else if(currentUser.role==='user'){
-                    document.getElementById('tp_areaManager').value=''; 
+                    document.getElementById('tp_areaManager').value=''; // FAKA THAKBE
                     document.getElementById('tp_rsm').value=currentUser.rsmName||'';
                 }
                 else{
@@ -973,6 +966,7 @@
             const pendingListDiv = document.getElementById('dashboardPendingList');
             const pendingCard = document.getElementById('pendingCard');
             
+            // Hide pending list for Sales Admin as they don't approve
             if(currentUser.role === 'sales_admin') {
                 pendingCard.style.display = 'none';
             } else {
@@ -1045,7 +1039,7 @@
                 if(records.length===0){
                     pendingListDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No pending approvals for you.</div>';
                 } else {
-                    let html = '<div class="table-container"><table class="data-table" style="min-width:600px;"><thead><tr><th>Employee</th><th>Month</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+                    let html = '<div class="table-container"><table style="min-width:600px;"><thead><tr><th>Employee</th><th>Month</th><th>Status</th><th>Action</th></tr></thead><tbody>';
                     records.forEach(r => {
                         let statusBadge = r.data.info.status.replace('_', ' ');
                         html += `<tr>
@@ -1123,7 +1117,7 @@
             for(let key in fbRecords) {
                 const d = fbRecords[key]; const isMonth = d.info.month === selectedMonth; let canView = false;
                 if(d.info.empId===currentUser.empId||d.info.empId===currentUser.username)canView=true;
-                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')canView=true; 
+                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')canView=true; // Sales Admin can view all history
                 if(isRSMRole && d.info.approvalFlow?.rsmId===currentUser.username)canView=true;
                 if(currentUser.role==='user'&&d.info.approvalFlow?.amId===currentUser.username)canView=true;
                 if(canView && isMonth) records.push({key, data: d});
@@ -1148,11 +1142,14 @@
             const isRSMRole = currentUser.role==='admin' || currentUser.role==='sr_rsm';
             const isSalesAdmin = currentUser.role === 'sales_admin';
             
+            // Approve/Reject buttons only for relevant roles and statuses
             if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin'&&(isPAM||isPRSM)))btns+=`<button class="btn btn-sm btn-success" onclick="approvePlan('${key}')"><i class="fas fa-check"></i> Approve</button>`;
             if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin')&&!isApp&&!isRej)btns+=`<button class="btn btn-sm btn-danger" onclick="rejectPlan('${key}')"><i class="fas fa-times"></i> Reject</button>`;
             
+            // Print button available for RSM, Sr.RSM, Superadmin, and Sales Admin
             if(isRSMRole||currentUser.role==='superadmin'||isSalesAdmin)btns+=`<button class="btn btn-sm btn-primary" onclick="printHistoryRecord('${key}')"><i class="fas fa-print"></i></button>`;
             
+            // Edit button: Sales Admin cannot edit
             let canEdit=false;
             if(!isSalesAdmin){
                 if(isOwner&&!isApp)canEdit=true;
@@ -1163,6 +1160,7 @@
             }
             if(canEdit)btns+=`<button class="btn btn-sm btn-warning" onclick="editTourPlan('${key}')"><i class="fas fa-edit"></i> Edit</button>`;
             
+            // Delete button: Sales Admin cannot delete
             if((isOwner||currentUser.role==='superadmin')&&!isApp&&!isSalesAdmin)btns+=`<button class="btn btn-sm btn-danger" onclick="deleteTourPlan('${key}')"><i class="fas fa-trash"></i></button>`;
             
             return `<div class="hist-row"><div style="min-width:180px;"><strong style="font-size:13px;">${d.info.name}</strong> <span style="color:#888;font-size:11px;">(${d.info.empId})</span><br>${statusBadge} <span style="color:#aaa;font-size:10px;">| ${d.info.designation||''}</span></div><div class="hist-actions">${btns}</div></div>`;
@@ -1173,6 +1171,7 @@
             currentApproveKeyId = key;
             const signPreviewDiv = document.getElementById('approveSignPreview');
             
+            // Check if current user has signature saved
             if (!currentUser.signature) {
                 signPreviewDiv.innerHTML = `<span style="color: red; font-size: 12px;">No signature found! Please upload your signature in the 'My Signature' tab first.</span>`;
             } else {
@@ -1384,30 +1383,11 @@
                 </div>
             </div>`;
             
+            // If RSM or AM, areaManager field is blank. If RSM, rsm field is also blank.
             const amV = (isR || isAM) ? '' : (info.areaManager || '');
             const rsV = isR ? '' : (info.rsm || '');
-
-            const infoTable = `
-            <table class="info-table-custom" style="margin-bottom: 15px;">
-                <tr>
-                    <td class="label">Emp. ID</td><td class="value">${info.empId}</td>
-                    <td class="label">Month</td><td class="value">${info.month}</td>
-                </tr>
-                <tr>
-                    <td class="label">Name of Emp.</td><td class="value">${info.name}</td>
-                    <td class="label">Name of Area Manager</td><td class="value">${amV}</td>
-                </tr>
-                <tr>
-                    <td class="label">Territory</td><td class="value">${info.territory || ''}</td>
-                    <td class="label">Name of RSM/Sr.RSM</td><td class="value">${rsV}</td>
-                </tr>
-                <tr>
-                    <td class="label">Area</td><td class="value">${info.area || ''}</td>
-                    <td class="label">Region</td><td class="value">${info.region || ''}</td>
-                </tr>
-            </table>`;
             
-            return `${infoTable}<div class="table-container"><table class="data-table" style="min-width:600px;"><thead><tr style="background:#eee;"><th>Date</th><th>Day</th><th>HQ/EX.HQ</th><th>Morning WP</th><th>Evening WP</th></tr></thead><tbody>${rows}</tbody></table></div>${sigArea}`;
+            return `<div style="margin-bottom:15px;"><p style="margin:2px 0;font-size:13px;"><b>Employee:</b> ${info.name} (${info.empId})</p><p style="margin:2px 0;font-size:12px;color:#666;"><b>AM:</b> ${amV} | <b>RSM:</b> ${rsV} | <b>Month:</b> ${info.month}</p></div><div class="table-container"><table style="min-width:600px;"><thead><tr style="background:#eee;"><th>Date</th><th>Day</th><th>HQ/EX.HQ</th><th>Morning WP</th><th>Evening WP</th></tr></thead><tbody>${rows}</tbody></table></div>${sigArea}`;
         }
 
         // ===================== EDIT TOUR PLAN =====================
@@ -1443,6 +1423,7 @@
             document.getElementById('tp_area').value=d.info.area||'';
             document.getElementById('tp_region').value=d.info.region||'';
             
+            // Set Prepared Signature
             const prepImg = document.getElementById('sig_prepared_img');
             const prepText = document.getElementById('sig_prepared');
             if(currentEditSignatures.prepared_signature) {
@@ -1525,35 +1506,20 @@
                     </div>
                 </div>`;
                 
-                const printInfoTable = `
-                <table class="info-table-custom" style="margin-bottom: 10px;">
-                    <tr>
-                        <td class="label">Emp. ID</td><td class="value">${d.info.empId}</td>
-                        <td class="label">Month</td><td class="value">${d.info.month}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Name of Emp.</td><td class="value">${d.info.name}</td>
-                        <td class="label">Name of Area Manager</td><td class="value">${amV}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Territory</td><td class="value">${d.info.territory||''}</td>
-                        <td class="label">Name of RSM/Sr.RSM</td><td class="value">${rsV}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Area</td><td class="value">${d.info.area||''}</td>
-                        <td class="label">Region</td><td class="value">${d.info.region||''}</td>
-                    </tr>
-                </table>`;
-                
                 const c=`
                 <div class="header-print">
                     <h2 style="margin:0;color:#0056b3;">MONICO PHARMA LTD</h2>
                     <p style="margin:3px 0 0;">7, Gausnagar, New Eskaton, Ramna, Dhaka 1205</p>
                     <h3 style="margin:8px 0;">MONTHLY TOUR PLAN</h3>
                 </div>
-                ${printInfoTable}
-                <table style="margin-top:10px; width:100%; border-collapse:collapse;">
-                    <thead><tr><th style="border:1px solid #000; padding:4px;">Date</th><th style="border:1px solid #000; padding:4px;">Day</th><th style="border:1px solid #000; padding:4px;">HQ/EX.HQ</th><th style="border:1px solid #000; padding:4px;">Morning WP</th><th style="border:1px solid #000; padding:4px;">Evening WP</th></tr></thead>
+                <table class="info-table-print">
+                    <tr><td><span class="info-label-print">Emp. ID:</span> ${d.info.empId}</td><td><span class="info-label-print">Month:</span> ${d.info.month}</td></tr>
+                    <tr><td><span class="info-label-print">Name of Emp:</span> ${d.info.name}</td><td><span class="info-label-print">Name of Area Manager:</span> ${amV}</td></tr>
+                    <tr><td><span class="info-label-print">Territory:</span> ${d.info.territory||''}</td><td><span class="info-label-print">Name of RSM/Sr.RSM:</span> ${rsV}</td></tr>
+                    <tr><td><span class="info-label-print">Area:</span> ${d.info.area||''}</td><td><span class="info-label-print">Region:</span> ${d.info.region||''}</td></tr>
+                </table>
+                <table style="margin-top:10px;">
+                    <thead><tr><th>Date</th><th>Day</th><th>HQ/EX.HQ</th><th>Morning WP</th><th>Evening WP</th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
                 ${printSigArea}`;
@@ -1593,6 +1559,7 @@
                 fg_am.style.display = 'none';
                 designation = 'Senior Regional Sales Manager';
             } else if (r === 'sales_admin') {
+                // Sales Admin needs no assignment
                 fg_rsm.style.display = 'none';
                 fg_am.style.display = 'none';
                 designation = 'Sales Admin';
@@ -1690,7 +1657,7 @@
                 rsmName: rsmName,
                 amId: amId,
                 areaManagerName: areaManagerName,
-                signature: existingSig, 
+                signature: existingSig, // preserve signature if editing own profile
                 mustChangePassword: document.getElementById('m_forceChange').value === 'true'
             };
             
