@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MONICO PHARMA LTD - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0056b3;
+            --secondary: #004085;
+            --dark: #343a40;
+            --sidebar-width: 250px;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --danger: #dc3545;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
+        body { margin: 0; background-color: #f4f7f6; }
+
+        /* ===== LOGIN ===== */
+        .login-container { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .login-box { background: #fff; padding: 35px 25px; border-radius: 10px; box-shadow: 0 6px 30px rgba(0,0,0,0.12); width: 100%; max-width: 380px; }
+        .login-box h2 { color: var(--primary); text-align: center; margin-bottom: 25px; font-size: 22px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: #555; font-size: 12px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; transition: border 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,86,179,0.1); }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--secondary); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: var(--info); color: white; }
+        .btn-warning { background: var(--warning); color: #333; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; }
+
+        /* ===== LAYOUT ===== */
+        .dashboard { display: flex; height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--dark); color: white; display: flex; flex-direction: column; transition: transform 0.3s ease; position: fixed; height: 100%; z-index: 1000; left: 0; top: 0; overflow-y: auto; }
+        @media (min-width: 769px) {
+            .sidebar { transform: translateX(0); }
+            .main-content { margin-left: var(--sidebar-width); }
+            .menu-toggle { display: none !important; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; }
+            .menu-toggle { display: block; }
+            .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+            .overlay.active { display: block; }
+        }
+
+        .brand { padding: 18px 15px; background: var(--secondary); text-align: center; }
+        .brand h2 { margin: 0; font-size: 17px; color: white; }
+        .brand p { margin: 4px 0 0; font-size: 10px; opacity: 0.7; }
+        .user-info { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+        .user-info span { font-weight: bold; color: #ffc107; display: block; margin-bottom: 3px; }
+        .nav-menu { flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 11px 18px; color: #ccc; cursor: pointer; transition: 0.2s; text-decoration: none; font-size: 13px; }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+        .nav-item i { width: 22px; margin-right: 10px; text-align: center; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; }
+        .top-bar { height: 48px; background: white; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; flex-shrink: 0; }
+        .content-area { flex: 1; padding: 15px; overflow-y: auto; }
+
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; margin-bottom: 20px; }
+        .card-header { border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px; font-size: 18px; text-align: center; color: var(--primary); text-transform: uppercase; font-weight: bold; }
+
+        /* ===== WIDGETS ===== */
+        .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .widget { background: white; padding: 18px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; }
+        .widget-info h3 { margin: 0; font-size: 26px; color: var(--dark); }
+        .widget-info p { margin: 4px 0 0; color: #666; font-size: 12px; }
+        .widget-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+        .bg-primary { background: var(--primary); } .bg-success { background: var(--success); } .bg-warning { background: var(--warning); } .bg-danger { background: var(--danger); }
+
+        /* ===== TABLES ===== */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
+        table.data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table.data-table th, table.data-table td { padding: 4px 3px; border: 1px solid #000; text-align: center; font-size: 11px; }
+        table.data-table th { background: #f0f0f0; font-weight: bold; white-space: nowrap; }
+        
+        table.data-table select { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; cursor: pointer;}
+        table.data-table select:focus { background: #eef5ff; }
+        table.data-table select:disabled { color: #999; cursor: not-allowed; }
+        table.data-table input[type="text"] { border: none; background: transparent; width: 100%; font-size: 11px; padding: 4px; text-align: center; outline: none; }
+        table.data-table input[type="text"]:focus { background: #eef5ff; }
+        table.data-table input[type="text"]:disabled { color: #999; cursor: not-allowed; }
+
+        /* Info Table (New Design) */
+        .info-table-custom { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table-custom td { border: 1px solid #000; padding: 8px; font-size: 14px; }
+        .info-table-custom td.label { font-weight: bold; width: 20%; background: #f5f5f5; }
+        .info-table-custom td.value { width: 30%; }
+        .info-table-custom td.value input { border: none; background: transparent; width: 100%; font-size: 14px; padding: 0; outline: none; font-weight: bold; color: #333; }
+        .info-table-custom td.value select { border: none; background: transparent; width: 100%; font-size: 14px; padding: 0; outline: none; font-weight: bold; color: #333; }
+
+        /* Holiday Row Background Color */
+        .holiday-row { background-color: #e9ecef !important; }
+        .holiday-row input, .holiday-row select { background-color: #e9ecef !important; }
+
+        .address-text { text-align: center; font-size: 11px; color: #555; margin-bottom: 5px; }
+        .day-name { font-weight: bold; background: #f9f9f9; }
+
+        .hidden { display: none; }
+        .status-msg { font-size: 12px; margin-top: 5px; }
+        .error { color: red; } .success { color: green; }
+        .auto-save-indicator { font-size: 10px; color: #666; margin-left: 8px; font-style: italic; }
+        .sync-status { font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+        .sync-online { background: #d4edda; color: #155724; }
+        .sync-offline { background: #f8d7da; color: #721c24; }
+
+        /* ===== SIGNATURE ===== */
+        .signature-area { display: flex; justify-content: space-between; margin-top: 25px; width: 100%; flex-wrap: wrap; gap: 10px; }
+        .sig-box { width: 24%; text-align: center; font-size: 10px; position: relative; }
+        @media (max-width: 600px) { .sig-box { width: 48%; } }
+        .sig-name { font-weight: bold; min-height: 18px; border-bottom: 1px solid #000; margin-bottom: 2px; padding-bottom: 2px; }
+
+        /* ===== BADGES ===== */
+        .badge { padding: 3px 7px; border-radius: 4px; font-size: 9px; font-weight: bold; white-space: nowrap; }
+        .badge-pending { background: #fff3cd; color: #856404; } .badge-approved { background: #d4edda; color: #155724; } .badge-rejected { background: #f8d7da; color: #721c24; }
+        .area-group-header { background: #e9ecef; padding: 8px; font-weight: bold; margin-top: 10px; border-left: 4px solid var(--primary); }
+
+        /* ===== HISTORY ROW ===== */
+        .hist-row { background: #fff; border: 1px solid #ddd; padding: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-radius: 4px; }
+        .hist-row:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .hist-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+
+        /* ===== MODAL ===== */
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; justify-content: center; align-items: center; padding: 10px; display: none; }
+        .modal-content { background: #fff; width: 100%; max-width: 850px; max-height: 92vh; overflow-y: auto; padding: 15px; position: relative; border-radius: 8px; }
+        @media (max-width: 600px) { .modal-content { padding: 10px; } }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body { margin: 0; padding: 0; background-color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #dashboardScreen, .sidebar, .top-bar, .no-print, .widget-grid, .login-container, .modal-bg { display: none !important; }
+            #history-print-container { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            body { font-family: Arial, sans-serif; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            table, th, td { border: 1px solid #000; }
+            th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            td.label { background-color: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
+            .holiday-row { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .holiday-row td { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+            .header-print { text-align: center; margin-bottom: 10px; }
+            
+            /* Print Signature Layout */
+            .signature-area-print { display: flex; justify-content: space-between; margin-top: 60px; width: 100%; }
+            .sig-box-print { width: 24%; text-align: center; font-size: 9pt; }
+            .sig-img-area-print { height: 50px; display: flex; align-items: flex-end; justify-content: center; }
+            .sig-img-area-print img { max-height: 45px; max-width: 100%; }
+            .sig-line-print { border-bottom: 1px solid #000; width: 100%; margin-bottom: 5px; }
+            .sig-text-print { font-size: 9pt; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- LOGIN -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h2><i class="fas fa-pills" style="margin-right:8px;"></i>MONICO PHARMA</h2>
+            <div class="form-group"><label>User ID</label><input type="text" id="loginUsername" placeholder="Enter User ID" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter Password" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+            <button onclick="handleLogin()" class="btn btn-primary" style="width:100%;margin-top:5px;">Login</button>
+            <div id="loginError" class="status-msg error" style="text-align:center;margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboardScreen" class="dashboard hidden">
+        <div class="sidebar no-print" id="sidebar">
+            <div class="brand"><h2>MONICO PHARMA</h2><p>Health. We Care.</p></div>
+            <div class="user-info"><span id="sidebarName">User</span><div id="sidebarRole">Role</div></div>
+            <nav class="nav-menu">
+                <a class="nav-item active" id="menuHome" onclick="showSection('home')"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a class="nav-item" id="menuTourPlan" onclick="showSection('tourPlan')"><i class="fas fa-calendar-alt"></i> Tour Plan Entry</a>
+                <a class="nav-item" id="menuTourHistory" onclick="showSection('tourHistory')"><i class="fas fa-history"></i> Tour Plan History</a>
+                <a class="nav-item" id="menuSignature" onclick="showSection('signature')"><i class="fas fa-signature"></i> My Signature</a>
+                <a class="nav-item hidden" id="menuUserMgmt" onclick="showSection('userMgmt')"><i class="fas fa-users-cog"></i> User Management</a>
+            </nav>
+            <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.1);"><button onclick="logout()" class="btn btn-danger" style="width:100%;font-size:12px;"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar no-print">
+                <button class="btn btn-primary menu-toggle" onclick="toggleSidebar()" style="padding:5px 10px;"><i class="fas fa-bars"></i></button>
+                <span id="topBarDate" style="font-size:12px;color:#555;"></span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="syncStatus" class="sync-status sync-online">Online</span>
+                    <button id="printBtn" onclick="window.print()" class="btn btn-sm btn-primary no-print" style="display:none;"><i class="fas fa-print"></i> Print</button>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <!-- HOME -->
+                <div id="sectionHome" class="section">
+                    <div class="card">
+                        <div class="card-header">Dashboard Overview</div>
+                        <div class="widget-grid">
+                            <div class="widget"><div class="widget-info"><h3 id="stat-pending">0</h3><p>Pending</p></div><div class="widget-icon bg-warning"><i class="fas fa-clock"></i></div></div>
+                            <div class="widget"><div class="widget-info"><h3 id="stat-rejected">0</h3><p>Rejected</p></div><div class="widget-icon bg-danger"><i class="fas fa-times-circle"></i></div></div>
+                            <div class="widget"><div class="widget-info"><h3 id="stat-approved">0</h3><p>Approved</p></div><div class="widget-icon bg-success"><i class="fas fa-check-circle"></i></div></div>
+                            <div class="widget"><div class="widget-info"><h3 id="stat-unsynced">0</h3><p>Unsynced</p></div><div class="widget-icon bg-primary"><i class="fas fa-database"></i></div></div>
+                        </div>
+                        <p style="color:#666;font-size:13px;">Welcome, <strong id="welcomeName"></strong>!</p>
+                    </div>
+
+                    <div class="card" id="pendingCard">
+                        <div class="card-header">Approval Pending List</div>
+                        <div id="dashboardPendingList">
+                            <div style="text-align:center;padding:20px;color:#888;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOUR PLAN ENTRY -->
+                <div id="sectionTourPlan" class="section hidden">
+                    <div class="card" id="tourPlanCard">
+                        <div class="card-header">MONICO PHARMA LTD</div>
+                        <div class="address-text">7, Gausnagar, New Eskaton, Ramna, Dhaka 1205, Bangladesh</div>
+                        <h3 style="text-align:center;margin:0 0 10px;font-size:15px;font-weight:bold;">MONTHLY TOUR PLAN</h3>
+                        
+                        <table class="info-table-custom">
+                            <tr>
+                                <td class="label">Emp. ID</td>
+                                <td class="value"><input type="text" id="tp_empId" readonly></td>
+                                <td class="label">Month</td>
+                                <td class="value"><select id="tp_month" onchange="handleMonthChange()"></select></td>
+                            </tr>
+                            <tr>
+                                <td class="label">Name of Emp.</td>
+                                <td class="value"><input type="text" id="tp_name" readonly></td>
+                                <td class="label">Name of Area Manager</td>
+                                <td class="value"><input type="text" id="tp_areaManager" readonly></td>
+                            </tr>
+                            <tr>
+                                <td class="label">Territory</td>
+                                <td class="value"><input type="text" id="tp_territory" readonly></td>
+                                <td class="label">Name of RSM/Sr.RSM</td>
+                                <td class="value"><input type="text" id="tp_rsm" readonly></td>
+                            </tr>
+                            <tr>
+                                <td class="label">Area</td>
+                                <td class="value"><input type="text" id="tp_area" readonly></td>
+                                <td class="label">Region</td>
+                                <td class="value"><input type="text" id="tp_region" readonly></td>
+                            </tr>
+                        </table>
+
+                        <form id="tourPlanForm">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr>
+                                        <th style="width:5%">Date</th>
+                                        <th style="width:10%">Day</th>
+                                        <th style="width:25%">HQ / EX.HQ / Holiday</th>
+                                        <th style="width:30%">Morning WP</th>
+                                        <th style="width:30%">Evening WP</th>
+                                    </tr></thead>
+                                    <tbody id="tourPlanTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="signature-area">
+                                <div class="sig-box">
+                                    <div id="sig_prepared_box" style="min-height:40px; border-bottom: 1px solid #000; margin-bottom:2px; display:flex; align-items:flex-end; justify-content:center;">
+                                        <img id="sig_prepared_img" src="" style="max-height:40px; max-width:100%; display:none;">
+                                        <span id="sig_prepared" class="sig-name"></span>
+                                    </div>
+                                    <small>Prepared by</small><br>
+                                </div>
+                                <div class="sig-box"><div id="sig_am_box" style="min-height:40px; border-bottom: 1px solid #000; margin-bottom:2px; display:flex; align-items:flex-end; justify-content:center;"><img id="sig_am_img" src="" style="max-height:40px; max-width:100%; display:none;"><span id="sig_am" class="sig-name"></span></div><small>Checked by AM</small></div>
+                                <div class="sig-box"><div id="sig_rsm_box" style="min-height:40px; border-bottom: 1px solid #000; margin-bottom:2px; display:flex; align-items:flex-end; justify-content:center;"><img id="sig_rsm_img" src="" style="max-height:40px; max-width:100%; display:none;"><span id="sig_rsm" class="sig-name"></span></div><small>Re-checked by RSM</small></div>
+                                <div class="sig-box"><div id="sig_approved_box" style="min-height:40px; border-bottom: 1px solid #000; margin-bottom:2px; display:flex; align-items:flex-end; justify-content:center;"><span id="sig_approved" class="sig-name"></span></div><small>Approved by</small></div>
+                            </div>
+                            <div style="text-align:center;margin-top:18px;" class="no-print">
+                                <span id="autoSaveStatus" class="auto-save-indicator"></span>
+                                <button type="button" onclick="validateAndSave()" class="btn btn-success" style="margin-left:8px;">Submit Plan</button>
+                            </div>
+                            <div id="tp_status" class="status-msg no-print" style="text-align:center;"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TOUR HISTORY -->
+                <div id="sectionTourHistory" class="section hidden">
+                    <div class="card">
+                        <div class="card-header">Tour Plan History</div>
+                        <div class="no-print" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <label style="font-size:12px;font-weight:600;">Month:</label>
+                            <select id="historyMonthFilter" onchange="loadTourHistory()" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;"></select>
+                        </div>
+                        <div id="tourHistoryContent"></div>
+                    </div>
+                </div>
+
+                <!-- MY SIGNATURE -->
+                <div id="sectionSignature" class="section hidden">
+                    <div class="card">
+                        <div class="card-header">My Signature</div>
+                        <p style="text-align:center; font-size:13px; color:#555; margin-bottom:20px;">Upload your signature once. It will be automatically used when you create or approve Tour Plans.</p>
+                        <div style="text-align:center; margin: 20px 0;">
+                            <div id="mySigPreviewBox" style="min-height: 150px; border: 1px dashed #ccc; padding: 10px; display: inline-block; min-width: 300px; background: #f9f9f9;">
+                                <img id="mySigPreview" src="" style="max-height: 140px; display:none;">
+                                <span id="noSigMsg" style="color:#888; line-height: 140px;">No signature uploaded yet.</span>
+                            </div>
+                        </div>
+                        <div style="text-align:center;">
+                            <input type="file" id="mySigUpload" accept="image/*" style="display:none;" onchange="previewMySign(event)">
+                            <button class="btn btn-primary" onclick="document.getElementById('mySigUpload').click()"><i class="fas fa-upload"></i> Select Image</button>
+                            <button class="btn btn-success" onclick="saveMySignature()" style="display:none;" id="saveSigBtn"><i class="fas fa-save"></i> Save Signature</button>
+                        </div>
+                        <div id="sigStatus" class="status-msg" style="text-align:center; margin-top:15px;"></div>
+                    </div>
+                </div>
+
+                <!-- USER MANAGEMENT -->
+                <div id="sectionUserMgmt" class="section hidden">
+                    <div class="card">
+                        <div class="card-header">User Management (Super Admin Only)</div>
+                        <div style="background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:18px;" class="no-print">
+                            <form id="userForm">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                    <div class="form-group"><label>Emp. ID</label><input type="text" id="m_empId"></div>
+                                    <div class="form-group"><label>Name</label><input type="text" id="m_name"></div>
+                                    <div class="form-group" id="fg_role"><label>Role</label><select id="m_role" onchange="handleRoleChange()" style="padding:8px;"></select></div>
+                                    <div class="form-group"><label>Designation</label><input type="text" id="m_designation" readonly style="background-color:#e9ecef;"></div>
+                                    <div class="form-group hidden" id="fg_rsm"><label>Assign to RSM</label><select id="m_parent_rsm" onchange="handleParentRSMChange()" style="padding:8px;"></select></div>
+                                    <div class="form-group hidden" id="fg_am"><label>Assign to AM</label><select id="m_parent_am" style="padding:8px;"></select></div>
+                                    <div class="form-group"><label>Territory</label><input type="text" id="m_territory"></div>
+                                    <div class="form-group"><label>Area</label><input type="text" id="m_area"></div>
+                                    <div class="form-group"><label>Region</label><input type="text" id="m_region"></div>
+                                    <div class="form-group"><label>User ID</label><input type="text" id="m_username" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+                                    <div class="form-group"><label>Password</label><input type="text" id="m_password" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+                                    <div class="form-group"><label>Force Pass Change (1st Login)</label><select id="m_forceChange" style="padding:8px;"><option value="true">Yes</option><option value="false">No</option></select></div>
+                                </div>
+                                <button type="button" onclick="saveUser()" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Save User</button>
+                                <div id="m_status" class="status-msg"></div>
+                            </form>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table"><thead><tr><th>Emp.ID</th><th>Name</th><th>Role</th><th>Parent</th><th>User ID</th><th>Actions</th></tr></thead><tbody id="userTableBody"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- APPROVAL MODAL -->
+    <div id="approveModal" class="modal-bg">
+        <div class="modal-content">
+            <button onclick="closeApproveModal()" class="btn btn-danger btn-sm no-print" style="position:absolute;top:10px;right:10px;z-index:10;"><i class="fas fa-times"></i></button>
+            <h3 style="text-align:center;color:var(--primary);margin-bottom:15px;">Review & Approve Tour Plan</h3>
+            
+            <div style="background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:15px;font-size:13px;">
+                <div id="approveEmpInfo" style="display:flex;flex-wrap:wrap;gap:15px;justify-content:space-between;"></div>
+            </div>
+
+            <div class="table-container" style="margin-bottom:15px;">
+                <table class="data-table">
+                    <thead><tr>
+                        <th style="width:5%">Date</th>
+                        <th style="width:10%">Day</th>
+                        <th style="width:25%">HQ / EX.HQ / Holiday</th>
+                        <th style="width:30%">Morning WP</th>
+                        <th style="width:30%">Evening WP</th>
+                    </tr></thead>
+                    <tbody id="approveTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="form-group no-print">
+                <label>Remarks (Optional)</label>
+                <textarea id="approveRemarks" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;" rows="2"></textarea>
+            </div>
+
+            <div class="form-group no-print" style="text-align:center;">
+                <label><b>Your Signature (Will be applied automatically)</b></label><br>
+                <div id="approveSignPreview" style="border: 1px dashed #ccc; min-height: 100px; max-width: 300px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: #f9f9f9;">
+                    <span style="color: #999; font-size: 12px;">Loading signature...</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;" class="no-print">
+                <button class="btn btn-danger" onclick="closeApproveModal()">Cancel</button>
+                <button class="btn btn-success" onclick="confirmApprovePlan()"><i class="fas fa-check"></i> Submit Approval</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL (FOR FIRST LOGIN) -->
+    <div id="changePasswordModal" class="modal-bg" style="z-index: 1002;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h3 style="color:var(--primary); margin-bottom:15px;"><i class="fas fa-key"></i> Change Password</h3>
+            <p style="font-size:12px; color:#666; margin-bottom:20px;">For security reasons, please change your default password to continue.</p>
+            <div class="form-group" style="text-align:left;">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter New Password" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="form-group" style="text-align:left;">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div id="changePassError" class="status-msg error" style="text-align:center; margin-bottom:10px;"></div>
+            <button onclick="confirmChangePassword()" class="btn btn-primary" style="width:100%;">Update Password & Login</button>
+        </div>
+    </div>
+
+    <div id="history-print-container" style="display:none;"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBO8FAbwW_hpeMbJustqwo2k1FpYd-2O6Y",
+          authDomain: "filed-force-kushtia.firebaseapp.com",
+          databaseURL: "https://filed-force-kushtia-default-rtdb.firebaseio.com",
+          projectId: "filed-force-kushtia",
+          storageBucket: "filed-force-kushtia.firebasestorage.app",
+          messagingSenderId: "870294550570",
+          appId: "1:870294550570:web:b8f7baf0807a822f40eb53",
+          measurementId: "G-JBCXMJQPD8"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let autoSaveTimer = null;
+        let isOnline = navigator.onLine;
+        let currentApproveKeyId = null;
+        let tempMySignatureData = null;
+        
+        let currentEditSignatures = { prepared: "", prepared_signature: "", am: "", am_signature: "", rsm: "", rsm_signature: "", approved: "" };
+
+        // ==========================================
+        // ===== OFFLINE DATABASE (INDEXED DB) =====
+        // ==========================================
+        const DB_NAME = 'MonicoPharmaDB';
+        const DB_VERSION = 3; 
+        let idb = null;
+
+        function openIDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (e.oldVersion < 3) {
+                        if (db.objectStoreNames.contains('tourPlans')) db.deleteObjectStore('tourPlans');
+                        if (db.objectStoreNames.contains('syncQueue')) db.deleteObjectStore('syncQueue');
+                        if (db.objectStoreNames.contains('cachedUsers')) db.deleteObjectStore('cachedUsers');
+                    }
+                    if (!db.objectStoreNames.contains('tourPlans')) db.createObjectStore('tourPlans', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('syncQueue')) {
+                        const sq = db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+                        sq.createIndex('type', 'type', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('cachedUsers')) db.createObjectStore('cachedUsers', { keyPath: 'username' });
+                };
+                request.onsuccess = (e) => { idb = e.target.result; resolve(idb); };
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        async function clearIDBStore(storeName) {
+            if (!idb) await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = idb.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        async function idbPut(storeName, data) {
+            if (!idb) await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = idb.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).put(data);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        async function idbGet(storeName, key) {
+            if (!idb) await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = idb.transaction(storeName, 'readonly');
+                const req = tx.objectStore(storeName).get(key);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        async function idbGetAll(storeName) {
+            if (!idb) await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = idb.transaction(storeName, 'readonly');
+                const req = tx.objectStore(storeName).getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        async function idbDelete(storeName, key) {
+            if (!idb) await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = idb.transaction(storeName, 'readwrite');
+                tx.objectStore(storeName).delete(key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        async function addToSyncQueue(type, data) {
+            await idbPut('syncQueue', { type, data, timestamp: Date.now() });
+            updateUnsyncedCount();
+        }
+
+        // ==========================================
+        // ===== NETWORK STATUS & SYNC LOGIC ========
+        // ==========================================
+        function updateNetworkUI() {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            if (isOnline) { el.className = 'sync-status sync-online'; el.innerText = 'Online'; }
+            else { el.className = 'sync-status sync-offline'; el.innerText = 'Offline'; }
+        }
+
+        window.addEventListener('online', () => { isOnline = true; updateNetworkUI(); processSyncQueue(); });
+        window.addEventListener('offline', () => { isOnline = false; updateNetworkUI(); });
+
+        async function processSyncQueue() {
+            const queue = await idbGetAll('syncQueue');
+            if (queue.length === 0) return;
+            for (const item of queue) {
+                try {
+                    if (item.type === 'saveTourPlan') { await set(ref(db, 'tourPlans/' + item.data.id), item.data.payload); await idbDelete('syncQueue', item.id); }
+                    else if (item.type === 'updateStatus') { await update(ref(db, 'tourPlans/' + item.data.key), item.data.updates); await idbDelete('syncQueue', item.id); }
+                    else if (item.type === 'deleteTourPlan') { await remove(ref(db, 'tourPlans/' + item.data.key)); await idbDelete('syncQueue', item.id); }
+                    else if (item.type === 'saveUser') { await set(ref(db, 'Users/' + item.data.safeKey), item.data.payload); await idbDelete('syncQueue', item.id); }
+                    else if (item.type === 'deleteUser') { await remove(ref(db, 'Users/' + item.data.key)); await idbDelete('syncQueue', item.id); }
+                } catch (err) { console.error("Sync failed:", err); break; }
+            }
+            updateUnsyncedCount();
+            if (!document.getElementById('sectionTourHistory').classList.contains('hidden')) loadTourHistory();
+            if (!document.getElementById('sectionUserMgmt').classList.contains('hidden')) loadUsers();
+        }
+
+        async function updateUnsyncedCount() {
+            const queue = await idbGetAll('syncQueue');
+            const el = document.getElementById('stat-unsynced');
+            if (el) el.innerText = queue.length;
+        }
+
+        // ==========================================
+        // ===== HELPERS ============================
+        // ==========================================
+        function getRoleName(r){
+            if(r==='superadmin') return 'SuperAdmin';
+            if(r==='sales_admin') return 'Sales Admin';
+            if(r==='admin') return 'RSM';
+            if(r==='sr_rsm') return 'Sr. RSM';
+            if(r==='user') return 'AM';
+            if(r==='mpo') return 'MPO';
+            return r;
+        }
+        function getDesignation(r){
+            if(r==='superadmin') return 'Super Admin';
+            if(r==='sales_admin') return 'Sales Admin';
+            if(r==='admin') return 'Regional Sales Manager';
+            if(r==='sr_rsm') return 'Senior Regional Sales Manager';
+            if(r==='user') return 'Area Manager';
+            if(r==='mpo') return 'Medical Promotion Officer';
+            return '';
+        }
+        function getDayNameByDate(d,m){const ms=["January","February","March","April","May","June","July","August","September","October","November","December"],p=m.split("-"),y=2000+parseInt(p[1]),mi=ms.indexOf(p[0]),dt=new Date(y,mi+1,0),ds=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];const targetDate=new Date(y,mi,d);return ds[targetDate.getDay()];}
+
+        function populateMonthDropdowns(){
+            const se=document.getElementById('tp_month'),sh=document.getElementById('historyMonthFilter'),ms=["January","February","March","April","May","June","July","August","September","October","November","December"],cd=new Date();let h="";
+            for(let y=cd.getFullYear();y<=cd.getFullYear()+1;y++){let ys=y.toString().slice(-2);ms.forEach(m=>{h+=`<option value="${m}-${ys}">${m}-${ys}</option>`;});}
+            se.innerHTML=h;sh.innerHTML=h;let cv=`${ms[cd.getMonth()]}-${cd.getFullYear().toString().slice(-2)}`;se.value=cv;sh.value=cv;
+        }
+
+        function generateTourPlanTable(){
+            const tb=document.getElementById('tourPlanTableBody');tb.innerHTML="";
+            for(let i=1;i<=31;i++){
+                tb.innerHTML+=`<tr id="row_${i}" style="display:none;">
+                    <td>${i}</td>
+                    <td id="dayName_${i}" class="day-name"></td>
+                    <td>
+                        <select name="hq_${i}" onchange="handleHQChange(${i})">
+                            <option value="">--Select--</option>
+                            <option value="HQ">HQ</option>
+                            <option value="EX.HQ">EX.HQ</option>
+                            <option value="Holiday">Holiday</option>
+                        </select>
+                    </td>
+                    <td id="mwp_${i}"></td>
+                    <td id="ewp_${i}"></td>
+                </tr>`;
+            }
+        }
+
+        function triggerAutoSave(){clearTimeout(autoSaveTimer);document.getElementById('autoSaveStatus').innerText="Typing...";autoSaveTimer=setTimeout(()=>{validateAndSave(true);},2000);}
+
+        window.handleHQChange = function(i) {
+            const hqSel = document.querySelector(`[name="hq_${i}"]`);
+            const mWInp = document.querySelector(`[name="morning_wp_${i}"]`);
+            const eWInp = document.querySelector(`[name="evening_wp_${i}"]`);
+            const row = document.getElementById(`row_${i}`);
+            
+            if (hqSel.value === 'Holiday') {
+                row.classList.add('holiday-row');
+                if (mWInp.value === '' || (mWInp.value !== 'Holiday' && mWInp.value !== 'Friday Holiday')) {
+                    mWInp.value = 'Holiday';
+                    eWInp.value = 'Holiday';
+                    mWInp.focus();
+                    mWInp.select();
+                }
+            } else {
+                row.classList.remove('holiday-row');
+                if (mWInp.value === 'Holiday' || mWInp.value === 'Friday Holiday') {
+                    mWInp.value = '';
+                    eWInp.value = '';
+                }
+            }
+            triggerAutoSave();
+        };
+
+        window.handleMonthChange=async function(){
+            for(let i=1;i<=31;i++){
+                const r=document.getElementById(`row_${i}`);
+                if(r) {
+                    r.style.display="none";
+                    r.classList.remove('holiday-row');
+                }
+            }
+            const mv=document.getElementById('tp_month').value;if(!mv)return;
+            const p=mv.split("-"),mn=p[0],ys=p[1],y=2000+parseInt(ys),mi=["January","February","March","April","May","June","July","August","September","October","November","December"].indexOf(mn),dim=new Date(y,mi+1,0).getDate(),dn=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+            for(let i=1;i<=dim;i++){
+                const row=document.getElementById(`row_${i}`);row.style.display="";
+                const d=new Date(y,mi,i),dw=d.getDay(),dayN=dn[dw];
+                const hqSel=document.querySelector(`[name="hq_${i}"]`),dayC=document.getElementById(`dayName_${i}`);
+                const mW=document.getElementById(`mwp_${i}`),eW=document.getElementById(`ewp_${i}`);
+                dayC.innerText=dayN;
+                
+                if(dw===5){
+                    let dn2="Friday Holiday";
+                    hqSel.value="Holiday"; 
+                    hqSel.disabled = true;
+                    
+                    mW.innerHTML=`<input type="text" name="morning_wp_${i}" value="${dn2}" readonly disabled style="color:#999;">`;
+                    eW.innerHTML=`<input type="text" name="evening_wp_${i}" value="${dn2}" readonly disabled style="color:#999;">`;
+                    
+                    row.classList.add('holiday-row');
+                }else{
+                    hqSel.disabled = false;
+                    hqSel.value="";
+                    mW.innerHTML=`<input type="text" name="morning_wp_${i}" placeholder="Type Morning WP" oninput="triggerAutoSave()">`;
+                    eW.innerHTML=`<input type="text" name="evening_wp_${i}" placeholder="Type Evening WP" oninput="triggerAutoSave()">`;
+                }
+            }
+        };
+
+        window.toggleSidebar=function(){document.getElementById('sidebar').classList.toggle('active');document.getElementById('overlay').classList.toggle('active');};
+        document.getElementById('topBarDate').innerText=new Date().toDateString();
+        generateTourPlanTable();populateMonthDropdowns();
+
+        // ===================== LOGIN =====================
+        window.handleLogin = function() {
+            const u = document.getElementById('loginUsername').value.trim().toUpperCase();
+            const p = document.getElementById('loginPassword').value.toUpperCase();
+            const err = document.getElementById('loginError');
+            err.textContent = "";
+            if(!u || !p) { err.textContent = "Input required"; return; }
+            
+            if((u === 'SYSTEMADMIN' || u === 'KS') && p === 'MONICO@KU007') {
+                currentUser = { name: 'System Admin', role: 'superadmin', id: 'superadmin_001', username: 'systemadmin', designation: 'SuperAdmin', mustChangePassword: false };
+                showDashboard();
+                return;
+            }
+            
+            const safeKey = u.replace(/[.#$\[\]]/g,'_');
+            
+            if(isOnline) {
+                get(ref(db, 'Users/' + safeKey)).then(snap => {
+                    if(snap.exists()) {
+                        const d = snap.val();
+                        if(d.password && d.password.toUpperCase() === p) {
+                            currentUser = {...d, id: safeKey};
+                            checkFirstLogin(currentUser);
+                        } else {
+                            err.textContent = "Password Incorrect";
+                        }
+                    } else {
+                        tryOfflineLogin(u, p, err);
+                    }
+                }).catch(() => { 
+                    tryOfflineLogin(u, p, err); 
+                });
+            } else { 
+                tryOfflineLogin(u, p, err); 
+            }
+        };
+
+        async function tryOfflineLogin(u, p, errEl) {
+            const allUsers = await idbGetAll('cachedUsers');
+            const user = allUsers.find(x => x.username.toUpperCase() === u && x.password.toUpperCase() === p);
+            if (user) { 
+                currentUser = {...user, id: user.username.replace(/[.#$\[\]]/g,'_')}; 
+                checkFirstLogin(currentUser);
+            }
+            else { errEl.textContent = isOnline ? "User not found" : "Offline: User not found in cache"; }
+        }
+
+        function checkFirstLogin(user) {
+            if(user.mustChangePassword === true) {
+                document.getElementById('changePasswordModal').style.display = 'flex';
+                document.getElementById('changePassError').textContent = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+            } else {
+                showDashboard();
+            }
+        }
+
+        window.confirmChangePassword = function() {
+            const newPass = document.getElementById('newPassword').value.trim();
+            const confirmPass = document.getElementById('confirmNewPassword').value.trim();
+            const errEl = document.getElementById('changePassError');
+            
+            if(!newPass || !confirmPass) { errEl.textContent = "All fields are required"; return; }
+            if(newPass !== confirmPass) { errEl.textContent = "Passwords do not match"; return; }
+            
+            const safeKey = currentUser.username.replace(/[.#$\[\]]/g,'_');
+            const updates = {
+                password: newPass.toUpperCase(),
+                mustChangePassword: false
+            };
+            
+            const updatedUser = {...currentUser, ...updates};
+            
+            idbPut('cachedUsers', updatedUser).then(() => {
+                if(isOnline) {
+                    update(ref(db, 'Users/' + safeKey), updates).then(() => {
+                        currentUser = updatedUser;
+                        document.getElementById('changePasswordModal').style.display = 'none';
+                        showDashboard();
+                    }).catch(err => {
+                        errEl.textContent = "Update failed. Try again.";
+                    });
+                } else {
+                    addToSyncQueue('saveUser', { safeKey, payload: updatedUser });
+                    currentUser = updatedUser;
+                    document.getElementById('changePasswordModal').style.display = 'none';
+                    showDashboard();
+                }
+            });
+        };
+
+        window.logout=function(){location.reload();};
+
+        // ===================== SHOW SECTION =====================
+        async function showDashboard(){
+            document.getElementById('loginScreen').classList.add('hidden');document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('sidebarName').innerText=currentUser.name;document.getElementById('sidebarRole').innerText=`Role: ${getRoleName(currentUser.role)}`;document.getElementById('welcomeName').innerText=currentUser.name;
+            
+            // Reset menus
+            document.getElementById('menuHome').classList.remove('hidden');
+            document.getElementById('menuTourPlan').classList.remove('hidden');
+            document.getElementById('menuTourHistory').classList.remove('hidden');
+            document.getElementById('menuSignature').classList.remove('hidden');
+            document.getElementById('menuUserMgmt').classList.add('hidden');
+            
+            // Role-based menu visibility
+            if(currentUser.role === 'superadmin') {
+                document.getElementById('menuUserMgmt').classList.remove('hidden');
+            }
+            
+            // Sales Admin can only see Dashboard and History
+            if(currentUser.role === 'sales_admin') {
+                document.getElementById('menuTourPlan').classList.add('hidden');
+                document.getElementById('menuSignature').classList.add('hidden');
+            }
+            
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+            
+            if(isOnline) { try { const snap = await get(ref(db, 'Users')); if(snap.exists()) { await clearIDBStore('cachedUsers'); snap.forEach(c => idbPut('cachedUsers', c.val())); } } catch(e) {} }
+            showSection('home');
+        }
+
+        window.showSection=async function(id){
+            if(window.innerWidth<=768){
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+            document.querySelectorAll('.section').forEach(el=>el.classList.add('hidden'));document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+            document.getElementById('section'+id.charAt(0).toUpperCase()+id.slice(1)).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(item=>{if(item.id.toLowerCase().includes(id.toLowerCase()))item.classList.add('active');});
+            document.getElementById('printBtn').style.display=(id==='tourPlan'||id==='home'||id==='userMgmt'||id==='signature')?'none':'block';
+            if(id==='home')loadDashboardStats();
+            if(id==='userMgmt')initUserMgmt();
+            if(id==='tourHistory')loadTourHistory();
+            if(id==='signature')initSignatureTab();
+            if(id==='tourPlan'){
+                currentEditSignatures = { 
+                    prepared: currentUser.name, 
+                    prepared_signature: currentUser.signature || "", 
+                    am: "", am_signature: "", 
+                    rsm: "", rsm_signature: "", 
+                    approved: "" 
+                };
+                
+                const sigImg = document.getElementById('sig_prepared_img');
+                const sigText = document.getElementById('sig_prepared');
+                if (currentUser.signature) {
+                    sigImg.src = currentUser.signature;
+                    sigImg.style.display = 'block';
+                    sigText.innerText = '';
+                } else {
+                    sigImg.src = '';
+                    sigImg.style.display = 'none';
+                    sigText.innerText = currentUser.name + ' (No Signature Set)';
+                }
+                
+                updateSignatureUI();
+                
+                document.getElementById('tp_empId').value=currentUser.empId||currentUser.username;
+                document.getElementById('tp_name').value=currentUser.name;
+                document.getElementById('tp_designation').value=currentUser.designation||getDesignation(currentUser.role);
+                
+                // --- TERRITORY, AREA, REGION LOGIC ---
+                let territoryVal = currentUser.territory || '';
+                let areaVal = currentUser.area || '';
+                let regionVal = currentUser.region || '';
+
+                if(currentUser.role === 'user' || currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
+                    territoryVal = '-'; // AM, RSM, Sr.RSM er Territory -
+                }
+                if(currentUser.role === 'admin' || currentUser.role === 'sr_rsm') {
+                    areaVal = '-'; // RSM, Sr.RSM er Area -
+                }
+                
+                document.getElementById('tp_territory').value = territoryVal;
+                document.getElementById('tp_area').value = areaVal;
+                document.getElementById('tp_region').value = regionVal;
+
+                // --- AREA MANAGER & RSM LOGIC ---
+                if(currentUser.role==='admin' || currentUser.role==='sr_rsm'){
+                    document.getElementById('tp_areaManager').value='';
+                    document.getElementById('tp_rsm').value='';
+                }
+                else if(currentUser.role==='user'){
+                    document.getElementById('tp_areaManager').value=''; 
+                    document.getElementById('tp_rsm').value=currentUser.rsmName||'';
+                }
+                else{
+                    document.getElementById('tp_areaManager').value=currentUser.areaManagerName||'';
+                    document.getElementById('tp_rsm').value=currentUser.rsmName||'';
+                }
+                await handleMonthChange();
+            }
+        };
+
+        function updateSignatureUI() {
+            const amImg = document.getElementById('sig_am_img');
+            const amText = document.getElementById('sig_am');
+            if(currentEditSignatures.am_signature) {
+                amImg.src = currentEditSignatures.am_signature;
+                amImg.style.display = 'block';
+                amText.innerText = '';
+            } else {
+                amImg.src = '';
+                amImg.style.display = 'none';
+                amText.innerText = currentEditSignatures.am || "";
+            }
+
+            const rsmImg = document.getElementById('sig_rsm_img');
+            const rsmText = document.getElementById('sig_rsm');
+            if(currentEditSignatures.rsm_signature) {
+                rsmImg.src = currentEditSignatures.rsm_signature;
+                rsmImg.style.display = 'block';
+                rsmText.innerText = '';
+            } else {
+                rsmImg.src = '';
+                rsmImg.style.display = 'none';
+                rsmText.innerText = currentEditSignatures.rsm || "";
+            }
+
+            document.getElementById('sig_approved').innerText = currentEditSignatures.approved || "";
+        }
+
+        // ===================== MY SIGNATURE TAB =====================
+        function initSignatureTab() {
+            const preview = document.getElementById('mySigPreview');
+            const noSigMsg = document.getElementById('noSigMsg');
+            const saveBtn = document.getElementById('saveSigBtn');
+            tempMySignatureData = null;
+            document.getElementById('sigStatus').innerHTML = '';
+            document.getElementById('mySigUpload').value = '';
+            saveBtn.style.display = 'none';
+
+            if(currentUser.signature) {
+                preview.src = currentUser.signature;
+                preview.style.display = 'inline-block';
+                noSigMsg.style.display = 'none';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+                noSigMsg.style.display = 'block';
+            }
+        }
+
+        window.previewMySign = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                tempMySignatureData = e.target.result;
+                const preview = document.getElementById('mySigPreview');
+                preview.src = tempMySignatureData;
+                preview.style.display = 'inline-block';
+                document.getElementById('noSigMsg').style.display = 'none';
+                document.getElementById('saveSigBtn').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveMySignature = function() {
+            if (!tempMySignatureData) return;
+            const safeKey = currentUser.username.replace(/[.#$\[\]]/g,'_');
+            const updates = { signature: tempMySignatureData };
+            const updatedUser = { ...currentUser, ...updates };
+            
+            idbPut('cachedUsers', updatedUser).then(() => {
+                if(isOnline) {
+                    update(ref(db, 'Users/' + safeKey), updates).then(() => {
+                        currentUser = updatedUser;
+                        document.getElementById('sigStatus').innerHTML = "<span class='success'>Signature saved successfully!</span>";
+                        document.getElementById('saveSigBtn').style.display = 'none';
+                    }).catch(err => {
+                        document.getElementById('sigStatus').innerHTML = "<span class='error'>Failed to save. Try again.</span>";
+                    });
+                } else {
+                    addToSyncQueue('saveUser', { safeKey, payload: updatedUser });
+                    currentUser = updatedUser;
+                    document.getElementById('sigStatus').innerHTML = "<span class='success'>Signature saved locally!</span>";
+                    document.getElementById('saveSigBtn').style.display = 'none';
+                }
+            });
+        };
+
+        // ===================== DASHBOARD STATS & PENDING LIST =====================
+        async function loadDashboardStats(){
+            document.getElementById('stat-pending').innerText="0";document.getElementById('stat-rejected').innerText="0";document.getElementById('stat-approved').innerText="0";
+            const ms=["January","February","March","April","May","June","July","August","September","October","November","December"],d=new Date(),cm=`${ms[d.getMonth()]}-${d.getFullYear().toString().slice(-2)}`;
+            const pendingListDiv = document.getElementById('dashboardPendingList');
+            const pendingCard = document.getElementById('pendingCard');
+            
+            if(currentUser.role === 'sales_admin') {
+                pendingCard.style.display = 'none';
+            } else {
+                pendingCard.style.display = 'block';
+                pendingListDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            }
+            
+            let pe=0,re=0,ap=0;
+            let records=[];
+
+            const isRSMRole = currentUser.role==='admin' || currentUser.role==='sr_rsm';
+
+            if(isOnline) {
+                try {
+                    const snap = await get(ref(db,'tourPlans'));
+                    if(snap.exists()){
+                        snap.forEach(c=>{
+                            const p=c.val();
+                            let v=false;
+                            if(p.info.month===cm){
+                                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')v=true;
+                                else if(isRSMRole && p.info.approvalFlow?.rsmId===currentUser.username)v=true;
+                                else if(currentUser.role==='user'&&p.info.approvalFlow?.amId===currentUser.username)v=true;
+                                else if(p.info.empId===currentUser.empId)v=true;
+                            }
+                            if(v){
+                                if(p.info.status.includes('Pending'))pe++;
+                                if(p.info.status==='Rejected')re++;
+                                if(p.info.status==='Approved')ap++;
+                                if(p.info.status.includes('Pending') && p.info.status !== 'Pending_RSM' ? (currentUser.role==='user') : (isRSMRole)) {
+                                    let isPendingForMe = false;
+                                    if(currentUser.role==='user' && p.info.status==='Pending_AM') isPendingForMe = true;
+                                    if(isRSMRole && p.info.status==='Pending_RSM') isPendingForMe = true;
+                                    if(currentUser.role==='superadmin' && p.info.status==='Pending_AM') isPendingForMe = true;
+                                    if(isPendingForMe) records.push({key:c.key, data:p});
+                                }
+                            }
+                        });
+                    }
+                } catch(e) {}
+            } else {
+                const localPlans = await idbGetAll('tourPlans');
+                localPlans.forEach(p => {
+                    if(p.payload?.info?.month === cm) {
+                        let v=false;
+                        if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')v=true;
+                        else if(isRSMRole && p.payload.info.approvalFlow?.rsmId===currentUser.username)v=true;
+                        else if(currentUser.role==='user'&&p.payload.info.approvalFlow?.amId===currentUser.username)v=true;
+                        else if(p.payload.info.empId===currentUser.empId)v=true;
+                        if(v){
+                            if(p.payload.info.status.includes('Pending'))pe++;
+                            if(p.payload.info.status==='Rejected')re++;
+                            if(p.payload.info.status==='Approved')ap++;
+                            let isPendingForMe = false;
+                            if(currentUser.role==='user' && p.payload.info.status==='Pending_AM') isPendingForMe = true;
+                            if(isRSMRole && p.payload.info.status==='Pending_RSM') isPendingForMe = true;
+                            if(currentUser.role==='superadmin' && p.payload.info.status==='Pending_AM') isPendingForMe = true;
+                            if(isPendingForMe) records.push({key:p.id, data:p.payload});
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('stat-pending').innerText=pe;
+            document.getElementById('stat-rejected').innerText=re;
+            document.getElementById('stat-approved').innerText=ap;
+            updateUnsyncedCount();
+
+            if(currentUser.role !== 'sales_admin') {
+                if(records.length===0){
+                    pendingListDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No pending approvals for you.</div>';
+                } else {
+                    let html = '<div class="table-container"><table class="data-table" style="min-width:600px;"><thead><tr><th>Employee</th><th>Month</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+                    records.forEach(r => {
+                        let statusBadge = r.data.info.status.replace('_', ' ');
+                        html += `<tr>
+                            <td>${r.data.info.name} (${r.data.info.empId})</td>
+                            <td>${r.data.info.month}</td>
+                            <td><span class="badge badge-pending">${statusBadge}</span></td>
+                            <td><button class="btn btn-sm btn-success" onclick="approvePlan('${r.key}')"><i class="fas fa-check"></i> Review & Approve</button></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                    pendingListDiv.innerHTML = html;
+                }
+            }
+        }
+
+        // ===================== SAVE PLAN (UNIFIED) =====================
+        window.validateAndSave=function(isAuto=false){
+            const empId=document.getElementById('tp_empId').value,month=document.getElementById('tp_month').value,sDiv=document.getElementById('tp_status'),aDiv=document.getElementById('autoSaveStatus');
+            let planData=[],rows=document.querySelectorAll('#tourPlanTableBody tr'),ok=true;
+            
+            rows.forEach(r=>{
+                if(r.style.display!=="none"){
+                    const i=r.id.split('_')[1],hq=document.querySelector(`[name="hq_${i}"]`),mw=document.querySelector(`[name="morning_wp_${i}"]`),ew=document.querySelector(`[name="evening_wp_${i}"]`);
+                    if(!hq.value || !mw.value || !ew.value) ok=false;
+                    planData.push({date:i,hq:hq.value,morning_wp:mw.value,evening_wp:ew.value});
+                }
+            });
+            
+            if(!ok){if(!isAuto)sDiv.innerHTML="<span class='error'>Fill all required fields.</span>";else aDiv.innerText="Incomplete...";return;}
+            
+            let st="Pending",af={};
+            if(currentUser.role==='mpo'){st="Pending_AM";af={amId:currentUser.amId,rsmId:currentUser.rsmId};}
+            else if(currentUser.role==='user'){st="Pending_RSM";af={amId:currentUser.username,rsmId:currentUser.rsmId};}
+            else if(currentUser.role==='admin' || currentUser.role==='sr_rsm'){st="Approved"; currentEditSignatures.rsm = currentUser.name; currentEditSignatures.rsm_signature = currentUser.signature || "";}
+            else if(currentUser.role==='superadmin'){st="Approved"; currentEditSignatures.rsm = currentUser.name; currentEditSignatures.rsm_signature = currentUser.signature || "";}
+            
+            const recordId = `${empId}_${month.replace(/\s/g,'_')}`;
+            const payload = {
+                info:{empId,month,name:document.getElementById('tp_name').value,designation:document.getElementById('tp_designation').value,areaManager:document.getElementById('tp_areaManager').value,rsm:document.getElementById('tp_rsm').value,territory:document.getElementById('tp_territory').value,area:document.getElementById('tp_area').value,region:document.getElementById('tp_region').value,timestamp:Date.now(),status:st,approvalFlow:af,signatures: currentEditSignatures}, 
+                plan:planData
+            };
+
+            idbPut('tourPlans', { id: recordId, payload }).then(() => {
+                if(isAuto){aDiv.innerText="Saved Locally";aDiv.style.color="green";}
+                else{sDiv.innerHTML="<span class='success'>Saved Locally!</span>";handleMonthChange();}
+            });
+
+            if(isOnline) {
+                set(ref(db,'tourPlans/'+recordId), payload).then(()=>{
+                    if(isAuto){aDiv.innerText="Saved & Synced";aDiv.style.color="green";}
+                    else{alert("Tour Plan Submitted Successfully!");sDiv.innerHTML="<span class='success'>Successfully Saved & Synced!</span>";handleMonthChange();}
+                }).catch(err => {
+                    addToSyncQueue('saveTourPlan', { id: recordId, payload });
+                    if(!isAuto) alert("Saved locally. Will sync when online.");
+                });
+            } else {
+                addToSyncQueue('saveTourPlan', { id: recordId, payload });
+                if(!isAuto) alert("You are offline. Plan saved locally and will sync automatically.");
+            }
+        };
+
+        // ===================== TOUR HISTORY =====================
+        window.loadTourHistory = async function(){
+            const container=document.getElementById('tourHistoryContent');container.innerHTML='<div style="text-align:center;padding:20px;color:#888;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            const selectedMonth=document.getElementById('historyMonthFilter').value;
+            let fbRecords = {};
+            const isRSMRole = currentUser.role==='admin' || currentUser.role==='sr_rsm';
+            
+            if(isOnline) {
+                try { const snap = await get(ref(db,'tourPlans')); if(snap.exists()) { snap.forEach(c => { fbRecords[c.key] = c.val(); idbPut('tourPlans', { id: c.key, payload: c.val() }); }); } } catch(e) {}
+            }
+            const localRecords = await idbGetAll('tourPlans');
+            localRecords.forEach(r => { if (!fbRecords[r.id] || (r.payload.info.timestamp > (fbRecords[r.id].info?.timestamp || 0))) { fbRecords[r.id] = r.payload; } });
+            let records=[];
+            for(let key in fbRecords) {
+                const d = fbRecords[key]; const isMonth = d.info.month === selectedMonth; let canView = false;
+                if(d.info.empId===currentUser.empId||d.info.empId===currentUser.username)canView=true;
+                if(currentUser.role==='superadmin' || currentUser.role==='sales_admin')canView=true; 
+                if(isRSMRole && d.info.approvalFlow?.rsmId===currentUser.username)canView=true;
+                if(currentUser.role==='user'&&d.info.approvalFlow?.amId===currentUser.username)canView=true;
+                if(canView && isMonth) records.push({key, data: d});
+            }
+            let html="";
+            if(records.length===0)html='<div style="text-align:center;padding:20px;color:#888;">No records found for this month.</div>';
+            else{
+                if(isRSMRole || currentUser.role==='superadmin' || currentUser.role==='sales_admin'){const grouped={};records.forEach(r=>{const area=r.data.info.area||"Unknown";if(!grouped[area])grouped[area]=[];grouped[area].push(r);});for(const area in grouped){html+=`<div class="area-group-header"><i class="fas fa-map-marker-alt"></i> Area: ${area}</div>`;grouped[area].forEach(r=>{html+=buildHistoryRow(r.data,r.key);});} }
+                else{records.forEach(r=>{html+=buildHistoryRow(r.data,r.key);});}
+            }
+            container.innerHTML=html;
+        };
+
+        function buildHistoryRow(d,key){
+            let statusBadge=d.info.status;
+            if(statusBadge.includes('Pending'))statusBadge=`<span class="badge badge-pending">${statusBadge.replace('_',' ')}</span>`;
+            else if(statusBadge==='Approved')statusBadge="<span class='badge badge-approved'>Approved</span>";
+            else if(statusBadge==='Rejected')statusBadge="<span class='badge badge-rejected'>Rejected</span>";
+            let btns=`<button class="btn btn-sm btn-info" onclick="viewTourPlan('${key}')"><i class="fas fa-eye"></i> View</button>`;
+            const isOwner=(d.info.empId===currentUser.empId||d.info.empId===currentUser.username);
+            const isPAM=d.info.status==='Pending_AM',isPRSM=d.info.status==='Pending_RSM',isRej=d.info.status==='Rejected',isApp=d.info.status==='Approved';
+            const isRSMRole = currentUser.role==='admin' || currentUser.role==='sr_rsm';
+            const isSalesAdmin = currentUser.role === 'sales_admin';
+            
+            if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin'&&(isPAM||isPRSM)))btns+=`<button class="btn btn-sm btn-success" onclick="approvePlan('${key}')"><i class="fas fa-check"></i> Approve</button>`;
+            if((currentUser.role==='user'&&isPAM)||(isRSMRole&&isPRSM)||(currentUser.role==='superadmin')&&!isApp&&!isRej)btns+=`<button class="btn btn-sm btn-danger" onclick="rejectPlan('${key}')"><i class="fas fa-times"></i> Reject</button>`;
+            
+            if(isRSMRole||currentUser.role==='superadmin'||isSalesAdmin)btns+=`<button class="btn btn-sm btn-primary" onclick="printHistoryRecord('${key}')"><i class="fas fa-print"></i></button>`;
+            
+            let canEdit=false;
+            if(!isSalesAdmin){
+                if(isOwner&&!isApp)canEdit=true;
+                if(currentUser.role==='user'&&isPAM)canEdit=true;
+                if(isRSMRole&&isPRSM)canEdit=true;
+                if(currentUser.role==='superadmin'&&!isApp)canEdit=true;
+                if(isRej&&isOwner)canEdit=true;
+            }
+            if(canEdit)btns+=`<button class="btn btn-sm btn-warning" onclick="editTourPlan('${key}')"><i class="fas fa-edit"></i> Edit</button>`;
+            
+            if((isOwner||currentUser.role==='superadmin')&&!isApp&&!isSalesAdmin)btns+=`<button class="btn btn-sm btn-danger" onclick="deleteTourPlan('${key}')"><i class="fas fa-trash"></i></button>`;
+            
+            return `<div class="hist-row"><div style="min-width:180px;"><strong style="font-size:13px;">${d.info.name}</strong> <span style="color:#888;font-size:11px;">(${d.info.empId})</span><br>${statusBadge} <span style="color:#aaa;font-size:10px;">| ${d.info.designation||''}</span></div><div class="hist-actions">${btns}</div></div>`;
+        }
+
+        // ===================== APPROVE / REJECT WITH SIGNATURE & EDIT =====================
+        window.approvePlan = function(key) {
+            currentApproveKeyId = key;
+            const signPreviewDiv = document.getElementById('approveSignPreview');
+            
+            if (!currentUser.signature) {
+                signPreviewDiv.innerHTML = `<span style="color: red; font-size: 12px;">No signature found! Please upload your signature in the 'My Signature' tab first.</span>`;
+            } else {
+                signPreviewDiv.innerHTML = `<img src="${currentUser.signature}" style="max-height: 120px; max-width: 100%;">`;
+            }
+
+            document.getElementById('approveRemarks').value = '';
+            
+            getPlanData(key).then(d => {
+                if(!d) return;
+                
+                document.getElementById('approveEmpInfo').innerHTML = `
+                    <div><b>Employee:</b> ${d.info.name}</div>
+                    <div><b>Emp ID:</b> ${d.info.empId}</div>
+                    <div><b>Month:</b> ${d.info.month}</div>
+                    <div><b>Status:</b> ${d.info.status.replace('_', ' ')}</div>
+                `;
+                
+                const tbody = document.getElementById('approveTableBody');
+                tbody.innerHTML = '';
+                d.plan.forEach(p => {
+                    if(p.hq || p.morning_wp || p.evening_wp) {
+                        const dayName = getDayNameByDate(p.date, d.info.month);
+                        const isFri = dayName === 'Fri';
+                        const rowClass = p.hq === 'Holiday' ? 'holiday-row' : '';
+                        
+                        tbody.innerHTML += `<tr class="${rowClass}">
+                            <td>${p.date}</td>
+                            <td>${dayName}</td>
+                            <td>
+                                <select name="approve_hq_${p.date}" ${isFri?'disabled':''} onchange="handleApproveHQChange(${p.date})">
+                                    <option value="HQ" ${p.hq==='HQ'?'selected':''}>HQ</option>
+                                    <option value="EX.HQ" ${p.hq==='EX.HQ'?'selected':''}>EX.HQ</option>
+                                    <option value="Holiday" ${p.hq==='Holiday'?'selected':''}>Holiday</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="approve_mwp_${p.date}" value="${p.morning_wp||''}" ${isFri?'disabled':''}></td>
+                            <td><input type="text" name="approve_ewp_${p.date}" value="${p.evening_wp||''}" ${isFri?'disabled':''}></td>
+                        </tr>`;
+                    }
+                });
+                
+                document.getElementById('approveModal').style.display = 'flex';
+            });
+        };
+
+        window.handleApproveHQChange = function(date) {
+            const hqSel = document.querySelector(`[name="approve_hq_${date}"]`);
+            const mWInp = document.querySelector(`[name="approve_mwp_${date}"]`);
+            const eWInp = document.querySelector(`[name="approve_ewp_${date}"]`);
+            const row = hqSel.closest('tr');
+            
+            if (hqSel.value === 'Holiday') {
+                row.classList.add('holiday-row');
+                if (mWInp.value === '' || (mWInp.value !== 'Holiday' && mWInp.value !== 'Friday Holiday')) {
+                    mWInp.value = 'Holiday';
+                    eWInp.value = 'Holiday';
+                }
+            } else {
+                row.classList.remove('holiday-row');
+                if (mWInp.value === 'Holiday' || mWInp.value === 'Friday Holiday') {
+                    mWInp.value = '';
+                    eWInp.value = '';
+                }
+            }
+        };
+
+        window.closeApproveModal = function() {
+            document.getElementById('approveModal').style.display = 'none';
+            currentApproveKeyId = null;
+        };
+
+        window.confirmApprovePlan = function() {
+            if (!currentUser.signature) {
+                alert("Please upload your signature in the 'My Signature' tab before approving.");
+                return;
+            }
+
+            const key = currentApproveKeyId;
+            getPlanData(key).then(d => {
+                if (!d) return;
+                
+                let newPlanData = [];
+                document.querySelectorAll('#approveTableBody tr').forEach(tr => {
+                    const date = tr.cells[0].innerText;
+                    const hq = document.querySelector(`[name="approve_hq_${date}"]`).value;
+                    const mwp = document.querySelector(`[name="approve_mwp_${date}"]`).value;
+                    const ewp = document.querySelector(`[name="approve_ewp_${date}"]`).value;
+                    newPlanData.push({date, hq, morning_wp: mwp, evening_wp: ewp});
+                });
+
+                let upd = {};
+                const oldSigs = d.info.signatures || {};
+                
+                if(currentUser.role === 'user') {
+                    upd['info/status'] = 'Pending_RSM';
+                    upd['info/signatures'] = { ...oldSigs, am: currentUser.name, am_signature: currentUser.signature };
+                } else {
+                    upd['info/status'] = 'Approved';
+                    upd['info/signatures'] = { 
+                        ...oldSigs, 
+                        rsm: currentUser.name, 
+                        rsm_signature: currentUser.signature,
+                        approved: currentUser.name
+                    };
+                }
+                
+                const remarks = document.getElementById('approveRemarks').value.trim();
+                if(remarks) upd['info/remarks'] = remarks;
+                
+                const mergedData = { 
+                    ...d, 
+                    info: { ...d.info, ...upd['info'], remarks: remarks || d.info.remarks }, 
+                    plan: newPlanData 
+                };
+                idbPut('tourPlans', { id: key, payload: mergedData });
+                
+                const fbUpdates = { ...upd, 'plan': newPlanData };
+                
+                if (isOnline) {
+                    update(ref(db, 'tourPlans/' + key), fbUpdates).then(() => {
+                        alert("Approved Successfully!");
+                        closeApproveModal();
+                        loadDashboardStats();
+                        loadTourHistory();
+                    });
+                } else {
+                    addToSyncQueue('updateStatus', { key, updates: fbUpdates });
+                    alert("Approved locally!");
+                    closeApproveModal();
+                    loadDashboardStats();
+                    loadTourHistory();
+                }
+            });
+        };
+
+        window.rejectPlan=function(key){
+            if(confirm("Reject this plan?")){
+                getPlanData(key).then(d=>{if(!d) return;const upd = {'info/status':'Rejected'};const mergedData = { ...d, info: { ...d.info, ...upd['info'] } };idbPut('tourPlans', { id: key, payload: mergedData });
+                if(isOnline) { update(ref(db,'tourPlans/'+key),upd).then(()=>{alert("Rejected!");loadDashboardStats();loadTourHistory();}); }
+                else { addToSyncQueue('updateStatus', { key, updates: upd }); alert("Rejected locally!");loadDashboardStats();loadTourHistory(); }});
+            }
+        };
+
+        window.deleteTourPlan=function(key){
+            if(confirm("Delete this plan permanently?")){idbDelete('tourPlans', key);
+            if(isOnline) { remove(ref(db,'tourPlans/'+key)).then(()=>loadTourHistory()); }
+            else { addToSyncQueue('deleteTourPlan', { key }); loadTourHistory(); }}
+        };
+
+        async function getPlanData(key) {
+            let local = await idbGet('tourPlans', key);
+            if (local) return local.payload;
+            if (isOnline) { const snap = await get(ref(db, 'tourPlans/' + key)); if (snap.exists()) return snap.val(); }
+            return null;
+        }
+
+        // ===================== VIEW TOUR PLAN =====================
+        window.viewTourPlan=function(key){
+            getPlanData(key).then(d=>{
+                if(!d)return;
+                const html=buildViewTable(d.info,d.plan);
+                const modal=document.createElement('div');
+                modal.className='modal-bg';
+                modal.style.display='flex';
+                modal.innerHTML=`<div class="modal-content"><button onclick="this.closest('.modal-bg').remove()" class="btn btn-danger btn-sm no-print" style="position:absolute;top:10px;right:10px;z-index:10;"><i class="fas fa-times"></i></button><button onclick="printHistoryRecord('${key}')" class="btn btn-primary btn-sm no-print" style="position:absolute;top:10px;right:55px;z-index:10;"><i class="fas fa-print"></i></button>${html}</div>`;
+                document.body.appendChild(modal);
+                modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+            });
+        };
+
+        function buildViewTable(info,plan){
+            let rows="";
+            plan.forEach(p=>{
+                if(p.hq||p.morning_wp||p.evening_wp){
+                    const dn=getDayNameByDate(p.date,info.month);
+                    const rowClass = p.hq === 'Holiday' ? 'holiday-row' : '';
+                    rows+=`<tr class="${rowClass}"><td>${p.date}</td><td>${dn}</td><td>${p.hq}</td><td>${p.morning_wp||''}</td><td>${p.evening_wp||''}</td></tr>`;
+                }
+            });
+            
+            const isR=info.designation?.toLowerCase().includes('rsm');
+            const isAM=info.designation?.toLowerCase().includes('area manager');
+            const rsmSignHtml = info.signatures?.rsm_signature ? `<img src="${info.signatures.rsm_signature}" style="max-height:50px;">` : "";
+            const prepSignHtml = info.signatures?.prepared_signature ? `<img src="${info.signatures.prepared_signature}" style="max-height:50px;">` : "";
+            const amSignHtml = info.signatures?.am_signature ? `<img src="${info.signatures.am_signature}" style="max-height:50px;">` : "";
+            
+            const sigArea = `
+            <div style="display:flex; justify-content:space-between; margin-top:60px; text-align:center; width:100%;">
+                <div style="width:24%;">
+                    <div style="height:50px; display:flex; align-items:flex-end; justify-content:center;">${prepSignHtml}</div>
+                    <div style="border-bottom:1px solid #000; width:100%; margin-bottom:5px;"></div>
+                    <div>Prepared By<br><b>${info.signatures?.prepared || info.name || ''}</b></div>
+                </div>
+                <div style="width:24%;">
+                    <div style="height:50px; display:flex; align-items:flex-end; justify-content:center;">${amSignHtml}</div>
+                    <div style="border-bottom:1px solid #000; width:100%; margin-bottom:5px;"></div>
+                    <div>Checked by AM<br><b>${info.signatures?.am || ''}</b></div>
+                </div>
+                <div style="width:24%;">
+                    <div style="height:50px; display:flex; align-items:flex-end; justify-content:center;">${rsmSignHtml}</div>
+                    <div style="border-bottom:1px solid #000; width:100%; margin-bottom:5px;"></div>
+                    <div>Re-checked by RSM<br><b>${info.signatures?.rsm || ''}</b></div>
+                </div>
+                <div style="width:24%;">
+                    <div style="height:50px;"></div>
+                    <div style="border-bottom:1px solid #000; width:100%; margin-bottom:5px;"></div>
+                    <div>Approved By<br><b>${info.signatures?.approved || ''}</b></div>
+                </div>
+            </div>`;
+            
+            const amV = (isR || isAM) ? '' : (info.areaManager || '');
+            const rsV = isR ? '' : (info.rsm || '');
+
+            const infoTable = `
+            <table class="info-table-custom" style="margin-bottom: 15px;">
+                <tr>
+                    <td class="label">Emp. ID</td><td class="value">${info.empId}</td>
+                    <td class="label">Month</td><td class="value">${info.month}</td>
+                </tr>
+                <tr>
+                    <td class="label">Name of Emp.</td><td class="value">${info.name}</td>
+                    <td class="label">Name of Area Manager</td><td class="value">${amV}</td>
+                </tr>
+                <tr>
+                    <td class="label">Territory</td><td class="value">${info.territory || ''}</td>
+                    <td class="label">Name of RSM/Sr.RSM</td><td class="value">${rsV}</td>
+                </tr>
+                <tr>
+                    <td class="label">Area</td><td class="value">${info.area || ''}</td>
+                    <td class="label">Region</td><td class="value">${info.region || ''}</td>
+                </tr>
+            </table>`;
+            
+            return `${infoTable}<div class="table-container"><table class="data-table" style="min-width:600px;"><thead><tr style="background:#eee;"><th>Date</th><th>Day</th><th>HQ/EX.HQ</th><th>Morning WP</th><th>Evening WP</th></tr></thead><tbody>${rows}</tbody></table></div>${sigArea}`;
+        }
+
+        // ===================== EDIT TOUR PLAN =====================
+        window.editTourPlan=async function(key){
+            const d = await getPlanData(key);
+            if(!d) return;
+            
+            currentEditSignatures = {
+                prepared: d.info.signatures?.prepared || d.info.name || "",
+                prepared_signature: d.info.signatures?.prepared_signature || "",
+                am: d.info.signatures?.am || "",
+                am_signature: d.info.signatures?.am_signature || "",
+                rsm: d.info.signatures?.rsm || "",
+                rsm_signature: d.info.signatures?.rsm_signature || "",
+                approved: d.info.signatures?.approved || ""
+            };
+            
+            if(window.innerWidth<=768) {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+            document.querySelectorAll('.section').forEach(el=>el.classList.add('hidden'));
+            document.getElementById('sectionTourPlan').classList.remove('hidden');
+            document.getElementById('printBtn').style.display='none';
+            
+            document.getElementById('tp_month').value=d.info.month;
+            document.getElementById('tp_empId').value=d.info.empId;
+            document.getElementById('tp_name').value=d.info.name;
+            document.getElementById('tp_designation').value=d.info.designation;
+            document.getElementById('tp_areaManager').value=d.info.areaManager||'';
+            document.getElementById('tp_rsm').value=d.info.rsm||'';
+            document.getElementById('tp_territory').value=d.info.territory||'';
+            document.getElementById('tp_area').value=d.info.area||'';
+            document.getElementById('tp_region').value=d.info.region||'';
+            
+            const prepImg = document.getElementById('sig_prepared_img');
+            const prepText = document.getElementById('sig_prepared');
+            if(currentEditSignatures.prepared_signature) {
+                prepImg.src = currentEditSignatures.prepared_signature;
+                prepImg.style.display = 'block';
+                prepText.innerText = '';
+            } else {
+                prepImg.src = '';
+                prepImg.style.display = 'none';
+                prepText.innerText = currentEditSignatures.prepared;
+            }
+            
+            updateSignatureUI();
+            await handleMonthChange();
+
+            d.plan.forEach(p=>{
+                const row = document.getElementById(`row_${p.date}`);
+                const hq=document.querySelector(`[name="hq_${p.date}"]`);
+                if(hq) hq.value = p.hq || '';
+                
+                const mWp=document.querySelector(`[name="morning_wp_${p.date}"]`);
+                if(mWp) mWp.value = p.morning_wp || '';
+                
+                const eWp=document.querySelector(`[name="evening_wp_${p.date}"]`);
+                if(eWp) eWp.value = p.evening_wp || '';
+
+                if (row && p.hq === 'Holiday') {
+                    row.classList.add('holiday-row');
+                } else if (row) {
+                    row.classList.remove('holiday-row');
+                }
+            });
+
+            document.getElementById('tp_status').innerHTML="<span class='success'>✏️ Editing mode. Modify and Save.</span>";
+            window.scrollTo(0,0);
+        };
+
+        // ===================== PRINT RECORD =====================
+        window.printHistoryRecord=function(key){
+            getPlanData(key).then(d=>{
+                if(!d) return;
+                const sigs=d.info.signatures||{};
+                let rows="";
+                d.plan.forEach(p=>{
+                    const dn=getDayNameByDate(p.date,d.info.month);
+                    const rowClass = p.hq === 'Holiday' ? 'holiday-row' : '';
+                    rows+=`<tr class="${rowClass}"><td style="border:1px solid #000;padding:2px;">${p.date}</td><td style="border:1px solid #000;padding:2px;">${dn}</td><td style="border:1px solid #000;padding:2px;">${p.hq}</td><td style="border:1px solid #000;padding:2px;">${p.morning_wp||''}</td><td style="border:1px solid #000;padding:2px;">${p.evening_wp||''}</td></tr>`;
+                });
+                
+                const isR=d.info.designation?.toLowerCase().includes('rsm');
+                const isAM=d.info.designation?.toLowerCase().includes('area manager');
+                const amV = (isR || isAM) ? '' : (d.info.areaManager || '');
+                const rsV = isR ? '' : (d.info.rsm || '');
+                
+                const rsmSignPrint = sigs.rsm_signature ? `<img src="${sigs.rsm_signature}" style="max-height:45px;">` : "";
+                const prepSignPrint = sigs.prepared_signature ? `<img src="${sigs.prepared_signature}" style="max-height:45px;">` : "";
+                const amSignPrint = sigs.am_signature ? `<img src="${sigs.am_signature}" style="max-height:45px;">` : "";
+                
+                const printSigArea = `
+                <div class="signature-area-print">
+                    <div class="sig-box-print">
+                        <div class="sig-img-area-print">${prepSignPrint}</div>
+                        <div class="sig-line-print"></div>
+                        <div class="sig-text-print">Prepared By<br><b>${sigs.prepared||d.info.name}</b></div>
+                    </div>
+                    <div class="sig-box-print">
+                        <div class="sig-img-area-print">${amSignPrint}</div>
+                        <div class="sig-line-print"></div>
+                        <div class="sig-text-print">Checked by AM<br><b>${sigs.am||''}</b></div>
+                    </div>
+                    <div class="sig-box-print">
+                        <div class="sig-img-area-print">${rsmSignPrint}</div>
+                        <div class="sig-line-print"></div>
+                        <div class="sig-text-print">Re-checked by RSM<br><b>${sigs.rsm||''}</b></div>
+                    </div>
+                    <div class="sig-box-print">
+                        <div class="sig-img-area-print"></div>
+                        <div class="sig-line-print"></div>
+                        <div class="sig-text-print">Approved By<br><b>${sigs.approved||''}</b></div>
+                    </div>
+                </div>`;
+                
+                const printInfoTable = `
+                <table class="info-table-custom" style="margin-bottom: 10px;">
+                    <tr>
+                        <td class="label">Emp. ID</td><td class="value">${d.info.empId}</td>
+                        <td class="label">Month</td><td class="value">${d.info.month}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Name of Emp.</td><td class="value">${d.info.name}</td>
+                        <td class="label">Name of Area Manager</td><td class="value">${amV}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Territory</td><td class="value">${d.info.territory||''}</td>
+                        <td class="label">Name of RSM/Sr.RSM</td><td class="value">${rsV}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Area</td><td class="value">${d.info.area||''}</td>
+                        <td class="label">Region</td><td class="value">${d.info.region||''}</td>
+                    </tr>
+                </table>`;
+                
+                const c=`
+                <div class="header-print">
+                    <h2 style="margin:0;color:#0056b3;">MONICO PHARMA LTD</h2>
+                    <p style="margin:3px 0 0;">7, Gausnagar, New Eskaton, Ramna, Dhaka 1205</p>
+                    <h3 style="margin:8px 0;">MONTHLY TOUR PLAN</h3>
+                </div>
+                ${printInfoTable}
+                <table style="margin-top:10px; width:100%; border-collapse:collapse;">
+                    <thead><tr><th style="border:1px solid #000; padding:4px;">Date</th><th style="border:1px solid #000; padding:4px;">Day</th><th style="border:1px solid #000; padding:4px;">HQ/EX.HQ</th><th style="border:1px solid #000; padding:4px;">Morning WP</th><th style="border:1px solid #000; padding:4px;">Evening WP</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                ${printSigArea}`;
+                
+                const pc=document.getElementById('history-print-container');
+                pc.innerHTML=c;
+                pc.style.display='block';
+                window.print();
+                setTimeout(()=>{pc.style.display='none';},100);
+            });
+        };
+
+        // ===================== USER MANAGEMENT =====================
+        function initUserMgmt(){loadUsers();prepareUserForm();}
+        
+        function prepareUserForm(){
+            const rs=document.getElementById('m_role');
+            rs.innerHTML = `<option value="sales_admin">Sales Admin</option><option value="admin">RSM</option><option value="sr_rsm">Sr. RSM</option><option value="user">AM</option><option value="mpo">MPO</option>`;
+            handleRoleChange(); 
+            loadAllRSMs();
+        }
+
+        window.handleRoleChange = function() {
+            const r = document.getElementById('m_role').value;
+            const fg_rsm = document.getElementById('fg_rsm');
+            const fg_am = document.getElementById('fg_am');
+            const desigInput = document.getElementById('m_designation');
+            
+            let designation = '';
+            
+            if (r === 'admin') {
+                fg_rsm.style.display = 'none';
+                fg_am.style.display = 'none';
+                designation = 'Regional Sales Manager';
+            } else if (r === 'sr_rsm') {
+                fg_rsm.style.display = 'none';
+                fg_am.style.display = 'none';
+                designation = 'Senior Regional Sales Manager';
+            } else if (r === 'sales_admin') {
+                fg_rsm.style.display = 'none';
+                fg_am.style.display = 'none';
+                designation = 'Sales Admin';
+            } else if (r === 'user') {
+                fg_rsm.style.display = 'block';
+                fg_am.style.display = 'none';
+                designation = 'Area Manager';
+            } else if (r === 'mpo') {
+                fg_rsm.style.display = 'block';
+                fg_am.style.display = 'block';
+                designation = 'Medical Promotion Officer';
+            }
+            
+            if (desigInput) {
+                desigInput.value = designation;
+            }
+        };
+        
+        function loadAllRSMs(selectedRsmId = "") {
+            const s = document.getElementById('m_parent_rsm');
+            s.innerHTML = "<option value=''>Select RSM</option>";
+            if (isOnline) {
+                get(ref(db, 'Users')).then(snap => {
+                    if (snap.exists()) {
+                        snap.forEach(c => {
+                            const u = c.val();
+                            if (u.role === 'admin' || u.role === 'sr_rsm') {
+                                let sel = (u.username === selectedRsmId) ? 'selected' : '';
+                                s.innerHTML += `<option value="${u.username}" ${sel}>${u.name} (${getRoleName(u.role)})</option>`;
+                            }
+                        });
+                    }
+                    if (selectedRsmId) {
+                        handleParentRSMChange(selectedRsmId);
+                    }
+                }).catch(e => { s.innerHTML = "<option value=''>Error loading RSMs</option>"; });
+            } else {
+                s.innerHTML = "<option value=''>Offline Mode</option>";
+            }
+        }
+
+        window.handleParentRSMChange = function(rid = "", selectedAmId = "") {
+            if(!rid) rid = document.getElementById('m_parent_rsm').value;
+            const as = document.getElementById('m_parent_am');
+            as.innerHTML = "<option value=''>Select AM</option>";
+            if(!rid) return;
+            
+            if (isOnline) {
+                get(ref(db, 'Users')).then(snap => {
+                    let found = false;
+                    if (snap.exists()) {
+                        snap.forEach(c => {
+                            const u = c.val();
+                            if (u.role === 'user' && u.rsmId === rid) {
+                                let sel = (u.username === selectedAmId) ? 'selected' : '';
+                                as.innerHTML += `<option value="${u.username}" ${sel}>${u.name}</option>`;
+                                found = true;
+                            }
+                        });
+                    }
+                    if (!found) as.innerHTML = "<option value=''>No AM Found for this RSM</option>";
+                }).catch(e => { as.innerHTML = "<option value=''>Error loading AMs</option>"; });
+            }
+        };
+        
+        window.saveUser = function() {
+            const r = document.getElementById('m_role').value;
+            const pR = document.getElementById('m_parent_rsm');
+            const pA = document.getElementById('m_parent_am');
+            
+            let rsmId = pR.value || "";
+            let rsmName = pR.options[pR.selectedIndex]?.text || "";
+            let amId = pA.value || "";
+            let areaManagerName = pA.options[pA.selectedIndex]?.text || "";
+            
+            if (r === 'admin' || r === 'sr_rsm' || r === 'sales_admin') {
+                rsmId = ""; rsmName = ""; amId = ""; areaManagerName = "";
+            } else if (r === 'user') {
+                amId = ""; areaManagerName = "";
+            }
+            
+            const existingSig = currentUser.role === 'superadmin' ? (document.getElementById('m_username').value.trim().toUpperCase() === currentUser.username ? currentUser.signature : "") : "";
+            
+            const d = {
+                empId: document.getElementById('m_empId').value.trim(),
+                name: document.getElementById('m_name').value.trim(),
+                designation: document.getElementById('m_designation').value.trim(),
+                territory: document.getElementById('m_territory').value.trim(),
+                area: document.getElementById('m_area').value.trim(),
+                region: document.getElementById('m_region').value.trim(),
+                username: document.getElementById('m_username').value.trim().toUpperCase(),
+                password: document.getElementById('m_password').value.toUpperCase(),
+                role: r,
+                rsmId: rsmId,
+                rsmName: rsmName,
+                amId: amId,
+                areaManagerName: areaManagerName,
+                signature: existingSig, 
+                mustChangePassword: document.getElementById('m_forceChange').value === 'true'
+            };
+            
+            if(!d.username||!d.password||!d.name){document.getElementById('m_status').innerHTML="<span class='error'>Missing required fields</span>";return;}
+            if((d.role === 'user' || d.role === 'mpo') && !d.rsmId) {document.getElementById('m_status').innerHTML="<span class='error'>Please assign to an RSM</span>";return;}
+            if(d.role === 'mpo' && !d.amId) {document.getElementById('m_status').innerHTML="<span class='error'>Please assign to an AM</span>";return;}
+            
+            const safeKey = d.username.replace(/[.#$\[\]]/g,'_');
+            idbPut('cachedUsers', d);
+            if(isOnline) { set(ref(db,'Users/'+safeKey),d).then(()=>{document.getElementById('m_status').innerHTML="<span class='success'>✅ Saved & Synced!</span>";document.getElementById('userForm').reset();prepareUserForm();loadUsers();}); }
+            else { addToSyncQueue('saveUser', { safeKey, payload: d }); document.getElementById('m_status').innerHTML="<span class='success'>✅ Saved Locally!</span>"; document.getElementById('userForm').reset();prepareUserForm();loadUsers(); }
+        };
+
+        async function loadUsers(){
+            const tb=document.getElementById('userTableBody');tb.innerHTML='<tr><td colspan="6" style="padding:15px;color:#888;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+            let usersData = {};
+            if(isOnline) { 
+                try { 
+                    const snap = await get(ref(db,'Users')); 
+                    if(snap.exists()){ 
+                        await clearIDBStore('cachedUsers'); 
+                        snap.forEach(c=>{ 
+                            usersData[c.key] = c.val(); 
+                            idbPut('cachedUsers', c.val()); 
+                        }); 
+                    } else {
+                        await clearIDBStore('cachedUsers'); 
+                    }
+                } catch(e) {} 
+            }
+            if (!isOnline) {
+                const localUsers = await idbGetAll('cachedUsers');
+                localUsers.forEach(u => { const k = u.username.replace(/[.#$\[\]]/g,'_'); if(!usersData[k]) usersData[k] = u; });
+            }
+            tb.innerHTML="";let hasData = false;
+            for(let k in usersData) { const u = usersData[k]; let s=false;if(currentUser.role==='superadmin')s=true;
+            if(s) { hasData = true; tb.innerHTML+=`<tr><td>${u.empId||'-'}</td><td>${u.name}</td><td>${getRoleName(u.role)}</td><td style="font-size:10px;">${u.rsmName||'-'} / ${u.areaManagerName||'-'}</td><td>${u.username}</td><td style="white-space:nowrap;"><button class="btn btn-sm btn-warning" onclick='editUser(${JSON.stringify(u).replace(/'/g,"&#39;")})'><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteUser('${k}')"><i class="fas fa-trash"></i></button></td></tr>`; } }
+            if(!hasData) tb.innerHTML="<tr><td colspan='6'>No users</td></tr>";
+        }
+
+        window.editUser = function(u) {
+            document.getElementById('m_empId').value = u.empId || '';
+            document.getElementById('m_name').value = u.name || '';
+            document.getElementById('m_role').value = u.role || 'mpo';
+            handleRoleChange(); 
+            document.getElementById('m_designation').value = u.designation || document.getElementById('m_designation').value;
+            document.getElementById('m_territory').value = u.territory || '';
+            document.getElementById('m_area').value = u.area || '';
+            document.getElementById('m_region').value = u.region || '';
+            document.getElementById('m_username').value = u.username || '';
+            document.getElementById('m_password').value = u.password || '';
+            document.getElementById('m_forceChange').value = u.mustChangePassword ? 'true' : 'false';
+            
+            if (u.role === 'user' || u.role === 'mpo') {
+                loadAllRSMs(u.rsmId || "", u.amId || "");
+            }
+            
+            window.scrollTo(0, 0);
+        };
+        
+        window.deleteUser=function(k){if(confirm("Delete this user permanently?")){idbDelete('cachedUsers', k);if(isOnline) { remove(ref(db,'Users/'+k)); } else { addToSyncQueue('deleteUser', { key: k }); } loadUsers();}}
+
+        // ===================== INITIALIZATION =====================
+        await openIDB();
+        updateNetworkUI();
+    </script>
+</body>
+</html>
